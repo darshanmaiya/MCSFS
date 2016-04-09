@@ -28,6 +28,8 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/css/bootstrap.min.css">
         <link href="css/fileinput.min.css" media="all" rel="stylesheet" type="text/css" />
         <link rel="stylesheet" href="css/common.css">
+        
+        <link rel="icon" href="favicon.ico?v2" />
     </head>
     <body>
          <nav class="navbar navbar-default navbar-fixed-top">
@@ -55,44 +57,54 @@
                 </div>
             </div>
         </nav>
-        <div class="container outer-body">			
+        <div class="container outer-body">
+            <jsp:include page="WEB-INF/jsp/alertUtil.jsp" />
 			<div>
 				<!-- Tab panes -->
 				<div class="tab-content">
 					<div role="tabpanel" class="tab-pane active" id="upload">
-					    <form action="mcsfs" method="POST">
-						  <label class="control-label">Select File *</label>
-						  <input id="input-2" name="input2" type="file" class="file" />
-						  <br />
-						  <label for="up-passphrase">Passphrase: *</label>
-						  <input id="up-passphrase" name="up-passphrase" class="form-control" />
-						  <br />
-                          <label for="up-adminkey">Admin Key (For replacing and deleting): *</label>
-                          <input id="up-adminkey" name="up-adminkey" class="form-control" />
-					   </form>
-					   <br />
-					   <span>
-					       <strong>Note: </strong>Existing files can be replaced by providing the previous passphrase and admin key
-					   </span>
+					    <form id="frm-file-upload" action="mcsfs" method="POST" enctype="multipart/form-data">
+					        <label for="up-passphrase">Passphrase: *</label>
+                            <input id="up-passphrase" name="up-passphrase" required class="form-control" />
+                            <br />
+                            <label for="up-adminkey">Admin Key (For replacing and deleting): *</label>
+                            <input id="up-adminkey" name="up-adminkey" required class="form-control" />
+                            <br />
+							<label class="control-label">Select File *</label>
+							<input id="file-input" name="file-input" required type="file" class="file" />
+					    </form>
+					    <br />
+					    <span>
+					        <strong>Note: </strong>
+					        Existing files can be replaced by providing the previous file name, passphrase and admin key
+					    </span>
 				    </div>
 					<div role="tabpanel" class="tab-pane" id="download">
-                        <label for="down-passphrase">Passphrase: *</label>
-						<div class="input-group">
-                            <input id="down-passphrase" name="down-passphrase" class="form-control" />
-						    <div class="input-group-btn">
-						        <button id="down-btn" class="btn btn-primary">
-						            <span class="glyphicon glyphicon-download-alt"></span>
-						            Download
-						        </button>
-						    </div>
-						</div>
+					    <form id="frm-file-download" action="mcsfs" method="GET">
+	                        <label for="down-passphrase">Passphrase: *</label>
+							<div class="input-group">
+	                            <input required id="down-passphrase" name="down-passphrase" class="form-control" />
+							    <div class="input-group-btn">
+							        <button type="submit" id="btn-down" class="btn btn-primary">
+							            <span class="glyphicon glyphicon-download-alt"></span>
+							            Download
+							        </button>
+							    </div>
+							</div>
+						</form>
 					</div>
 					<div role="tabpanel" class="tab-pane" id="delete">
-					    <label for="del-passphrase">Passphrase: *</label>
-                        <input id="del-passphrase" name="del-passphrase" class="form-control" />
-                        <br />
-                        <label for="del-adminkey">Admin Key: *</label>
-                        <input id="del-adminkey" name="del-adminkey" class="form-control" />
+					    <form id="frm-file-delete" action="mcsfs" method="GET">
+						    <label for="del-passphrase">Passphrase: *</label>
+	                        <input id="del-passphrase" name="del-passphrase" required class="form-control" />
+	                        <br />
+	                        <label for="del-adminkey">Admin Key: *</label>
+	                        <input id="del-adminkey" name="del-adminkey" required class="form-control" />
+	                        <br />
+	                        <button type="submit" id="btn-delete" class="btn btn-primary btn-lg btn-block">
+	                           <span class="glyphicon glyphicon-floppy-remove"></span> Delete
+	                        </button>
+                        </form>
 					</div>
 				</div>
 			</div>
@@ -101,6 +113,7 @@
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
     <script src="scripts/fileinput.min.js" type="text/javascript"></script>
+    <script src="scripts/alertUtil.js"></script>
     <script src="scripts/index.js"></script>
     </body>
 </html>
