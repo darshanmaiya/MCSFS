@@ -63,12 +63,9 @@
 				<!-- Tab panes -->
 				<div class="tab-content">
 					<div role="tabpanel" class="tab-pane active" id="upload">
-					    <form id="frm-file-upload" action="mcsfs" method="POST" enctype="multipart/form-data">
+					    <form id="frm-file-upload" action="/mcsfs" method="POST" enctype="multipart/form-data">
 					        <label for="up-passphrase">Passphrase: *</label>
                             <input id="up-passphrase" name="up-passphrase" required class="form-control" />
-                            <br />
-                            <label for="up-adminkey">Admin Key (For replacing and deleting): *</label>
-                            <input id="up-adminkey" name="up-adminkey" required class="form-control" />
                             <br />
 							<label class="control-label">Select File *</label>
 							<input id="file-input" name="file-input" required type="file" class="file" />
@@ -80,7 +77,7 @@
 					    </span>
 				    </div>
 					<div role="tabpanel" class="tab-pane" id="download">
-					    <form id="frm-file-download" action="mcsfs" method="GET">
+					    <form id="frm-file-download" action="/mcsfs" method="GET">
 	                        <label for="down-passphrase">Passphrase: *</label>
 							<div class="input-group">
 	                            <input required id="down-passphrase" name="down-passphrase" class="form-control" />
@@ -94,7 +91,7 @@
 						</form>
 					</div>
 					<div role="tabpanel" class="tab-pane" id="delete">
-					    <form id="frm-file-delete" action="mcsfs" method="GET">
+					    <form id="frm-file-delete" action="/mcsfs" method="GET">
 						    <label for="del-passphrase">Passphrase: *</label>
 	                        <input id="del-passphrase" name="del-passphrase" required class="form-control" />
 	                        <br />
