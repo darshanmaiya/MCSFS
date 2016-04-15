@@ -1,55 +1,64 @@
 package mcsfs.utils;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.UnsupportedEncodingException;
+import java.security.Key;
 import java.security.MessageDigest;
-import java.util.Arrays;
-import java.util.Base64;
+import java.security.NoSuchAlgorithmException;
 
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 
+import mcsfs.Constants;
+
 public class CryptUtils {
-	private static Cipher cipher;
-
-	public static String encrypt(String plainText, String secretKey)
-			throws Exception {
+	public static byte[] messageDigest(String message) {
+		byte[] digest = null;
+		try {
+			digest = message.getBytes(Constants.KIND_UTF8);
+			MessageDigest sha = MessageDigest.getInstance(Constants.KIND_SHA256);
+			
+			digest = sha.digest(digest);
+		} catch (UnsupportedEncodingException | NoSuchAlgorithmException e) {
+			e.printStackTrace();
+		}
 		
-		byte[] key = (secretKey).getBytes("UTF-8");
-		MessageDigest sha = MessageDigest.getInstance("SHA-1");
-		key = sha.digest(key);
-		key = Arrays.copyOf(key, 16); // use only first 128 bits
-
-		SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-		
-		cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.ENCRYPT_MODE, secretKeySpec);
-		
-		byte[] plainTextByte = plainText.getBytes("UTF-8");
-		byte[] encryptedByte = cipher.doFinal(plainTextByte);
-		
-		Base64.Encoder encoder = Base64.getEncoder();
-		String encryptedText = encoder.encodeToString(encryptedByte);
-		
-		return encryptedText;
+		return digest;
 	}
 
-	public static String decrypt(String encryptedText, String secretKey)
-			throws Exception {
-		
-		byte[] key = (secretKey).getBytes("UTF-8");
-		MessageDigest sha = MessageDigest.getInstance("SHA-1");
-		key = sha.digest(key);
-		key = Arrays.copyOf(key, 16); // use only first 128 bits
+	public static void encrypt(byte[] key, File inputFile, File outputFile)
+            throws Exception {
+        doCrypto(Cipher.ENCRYPT_MODE, key, inputFile, outputFile);
+    }
+ 
+    public static void decrypt(byte[] key, File inputFile, File outputFile)
+            throws Exception {
+        doCrypto(Cipher.DECRYPT_MODE, key, inputFile, outputFile);
+    }
 
-		SecretKeySpec secretKeySpec = new SecretKeySpec(key, "AES");
-		cipher = Cipher.getInstance("AES");
-		cipher.init(Cipher.DECRYPT_MODE, secretKeySpec);
-		
-		Base64.Decoder decoder = Base64.getDecoder();
-		byte[] encryptedTextByte = decoder.decode(encryptedText);
-		
-		byte[] decryptedByte = cipher.doFinal(encryptedTextByte);
-		String decryptedText = new String(decryptedByte, "UTF-8");
-		
-		return decryptedText;
-	}
+    public static void doCrypto(int cipherMode, byte[] key, File inputFile,
+            File outputFile) throws Exception {
+        try {
+            Key secretKey = new SecretKeySpec(key, Constants.KIND_AES);
+            Cipher cipher = Cipher.getInstance(Constants.KIND_AES);
+            cipher.init(cipherMode, secretKey);
+             
+            FileInputStream inputStream = new FileInputStream(inputFile);
+            byte[] inputBytes = new byte[(int) inputFile.length()];
+            inputStream.read(inputBytes);
+            
+            byte[] outputBytes = cipher.doFinal(inputBytes);
+             
+            FileOutputStream outputStream = new FileOutputStream(outputFile);
+            outputStream.write(outputBytes);
+             
+            inputStream.close();
+            outputStream.close();
+             
+        } catch (Exception ex) {
+            ex.printStackTrace();
+        }
+    }
 }

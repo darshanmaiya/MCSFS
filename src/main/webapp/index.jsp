@@ -70,11 +70,11 @@
 							<label class="control-label">Select File *</label>
 							<input id="file-input" name="file-input" required type="file" class="file" />
 					    </form>
-					    <br />
+					    <!-- <br />
 					    <span>
 					        <strong>Note: </strong>
 					        Existing files can be replaced by providing the previous file name, passphrase and admin key
-					    </span>
+					    </span> -->
 				    </div>
 					<div role="tabpanel" class="tab-pane" id="download">
 					    <form id="frm-file-download" action="/mcsfs" method="GET">

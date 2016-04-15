@@ -1,6 +1,7 @@
 package mcsfs;
 
 import java.io.*;
+import java.util.Arrays;
 import java.util.logging.*;
 
 import javax.servlet.ServletException;
@@ -11,6 +12,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
 
 /**
@@ -61,33 +63,44 @@ public class ApplicationServlet extends HttpServlet {
 		String passphrase = request.getParameter("up-passphrase");
 		
 		// Create path components to save the file
-	    final Part filePart = request.getPart("file-input");
-	    final String fileName = String.valueOf(System.currentTimeMillis()) + "___" + getFileName(filePart);
+	    Part filePart = request.getPart("file-input");
+	    String fileName = String.valueOf(System.currentTimeMillis())
+	    		+ "___" + getFileName(filePart)
+	    		+ "___" + passphrase;
 	    
 	    OutputStream out = null;
-	    InputStream filecontent = null;
+	    InputStream fileContent = null;
 
 	    try {
-	    	System.out.println("Plain Text Before Encryption: " + fileName);
-
-			String encryptedText = CryptUtils.encrypt(fileName, fileName + "___" + passphrase);
-			System.out.println("Encrypted Text After Encryption: " + encryptedText);
-
-			String decryptedText = CryptUtils.decrypt(encryptedText, fileName + "___" + passphrase);
-			System.out.println("Decrypted Text After Decryption: " + decryptedText);
-			
-	    	File f = new File(fileName);
-	        out = new FileOutputStream(f);
-	        filecontent = filePart.getInputStream();
-
-	        int read = 0;
-	        final byte[] bytes = new byte[1024];
-
-	        while ((read = filecontent.read(bytes)) != -1) {
-	            out.write(bytes, 0, read);
+	    	byte[] key = CryptUtils.messageDigest(fileName);
+	    	byte[] encryptionKey = Arrays.copyOfRange(key, Constants.ACCESS_KEY_LENGTH, key.length);
+	    	
+	    	// Get the access key
+	    	byte[] accessKey = Arrays.copyOf(key, Constants.ACCESS_KEY_LENGTH);
+	    	int[] accessKeyInt = ConversionUtils.byteArrayToIntArray(accessKey);
+	    	String accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
+	    	
+	    	File inputFile = new File("mcsfs_files/" + accessKeyStr);
+	    	byte[] readBuffer = new byte[Constants.DEFAULT_BUFFER_SIZE];
+	    	
+	    	out = new FileOutputStream(inputFile);
+	    	fileContent = filePart.getInputStream();
+	    	
+	    	int read;
+	    	
+	    	// Read the file from the client
+	        while ((read = fileContent.read(readBuffer)) != -1) {
+	        	out.write(readBuffer, 0, read);
 	        }
 	        
-	        response.getWriter().print("{\"result\": \"success\", \"accessKey\": \"" + encryptedText + "\"}");
+	        File encFile = new File("mcsfs_files/" + accessKeyStr + ".enc");
+	        CryptUtils.encrypt(encryptionKey, inputFile, encFile);
+	        
+	        File decFile = new File("mcsfs_files/" + getFileName(filePart));
+	        CryptUtils.decrypt(encryptionKey, encFile, decFile);
+
+	        response.getWriter().print("{\"result\": \"success\", \"accessKey\": \""
+	        		+ accessKeyStr + "\"}");
 	    } catch (Exception fne) {
 	        fne.printStackTrace();
 	        response.getWriter().print("{\"result\": \"failure\"");
@@ -95,8 +108,8 @@ public class ApplicationServlet extends HttpServlet {
 	        if (out != null) {
 	            out.close();
 	        }
-	        if (filecontent != null) {
-	            filecontent.close();
+	        if (fileContent != null) {
+	            fileContent.close();
 	        }
 	    }
 	}

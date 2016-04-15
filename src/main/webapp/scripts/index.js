@@ -5,7 +5,14 @@
 		
 		console.debug("upload");
 		
+		var fileSize = $('#file-input')[0].files[0].size;
+		if(fileSize/(1024 * 1024) > 200) {
+			alertUtil.danger("Max file size supported is 200 MiB. Please try again...");
+			return false;
+		}
+		
 		var data = new FormData($('#frm-file-upload')[0]);
+		data.append("file-size", $('#file-input')[0].files[0].size);
 		
 		$.ajax({
 		    url: '/mcsfs',
