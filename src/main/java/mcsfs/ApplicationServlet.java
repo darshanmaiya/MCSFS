@@ -1,7 +1,6 @@
 package mcsfs;
 
 import java.io.*;
-import java.util.Arrays;
 import java.util.logging.*;
 
 import javax.servlet.ServletException;
@@ -11,6 +10,8 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
+
+//import com.tiemens.secretshare.main.cli.*;
 
 import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
@@ -65,23 +66,24 @@ public class ApplicationServlet extends HttpServlet {
 		// Create path components to save the file
 	    Part filePart = request.getPart("file-input");
 	    String fileName = String.valueOf(System.currentTimeMillis())
-	    		+ "___" + getFileName(filePart)
-	    		+ "___" + passphrase;
+	    		+ Constants.DELIMITER_IN_FILENAME + getFileName(filePart)
+	    		+ Constants.DELIMITER_IN_FILENAME + passphrase;
 	    
 	    OutputStream out = null;
 	    InputStream fileContent = null;
 
 	    try {
-	    	byte[] key = CryptUtils.messageDigest(fileName);
-	    	byte[] encryptionKey = Arrays.copyOfRange(key, Constants.ACCESS_KEY_LENGTH, key.length);
+	    	byte[] secretKey = new byte[Constants.ACCESS_KEY_LENGTH];
+	    	byte[] accessKey = new byte[Constants.ACCESS_KEY_LENGTH];
+	    	String accessKeyStr = null;
 	    	
-	    	// Get the access key
-	    	byte[] accessKey = Arrays.copyOf(key, Constants.ACCESS_KEY_LENGTH);
+	    	CryptUtils.getKeys(fileName, secretKey, accessKey);
+
 	    	int[] accessKeyInt = ConversionUtils.byteArrayToIntArray(accessKey);
-	    	String accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
+	    	accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
 	    	
 	    	File inputFile = new File("mcsfs_files/" + accessKeyStr);
-	    	byte[] readBuffer = new byte[Constants.DEFAULT_BUFFER_SIZE];
+	    	byte[] readBuffer = new byte[Constants.BUFFER_SIZE];
 	    	
 	    	out = new FileOutputStream(inputFile);
 	    	fileContent = filePart.getInputStream();
@@ -94,13 +96,18 @@ public class ApplicationServlet extends HttpServlet {
 	        }
 	        
 	        File encFile = new File("mcsfs_files/" + accessKeyStr + ".enc");
-	        CryptUtils.encrypt(encryptionKey, inputFile, encFile);
+	        CryptUtils.encrypt(secretKey, inputFile, encFile);
 	        
-	        File decFile = new File("mcsfs_files/" + getFileName(filePart));
-	        CryptUtils.decrypt(encryptionKey, encFile, decFile);
+	        inputFile.delete();
+	        
+	        //File decFile = new File("mcsfs_files/" + getFileName(filePart));
+	        //CryptUtils.decrypt(secretKey, encFile, decFile);
 
 	        response.getWriter().print("{\"result\": \"success\", \"accessKey\": \""
 	        		+ accessKeyStr + "\"}");
+	        
+	        //String[] args = new String[]{"split", "-k","3","-n", "6", "-sS", "Cat In The Hat"};
+	        //Main.main(args);
 	    } catch (Exception fne) {
 	        fne.printStackTrace();
 	        response.getWriter().print("{\"result\": \"failure\"");

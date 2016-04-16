@@ -6,5 +6,7 @@ public class Constants {
 	public static final String KIND_AES = "AES";
 	public static final int ACCESS_KEY_LENGTH = 16;
 	
-	public static final int DEFAULT_BUFFER_SIZE = 4096;
+	public static final int BUFFER_SIZE = 4096;
+	
+	public static final String DELIMITER_IN_FILENAME = "___";
 }
