@@ -79,9 +79,9 @@
 				    </div>
 					<div role="tabpanel" class="tab-pane" id="download">
 					    <form id="frm-file-download" action="/mcsfs" method="GET">
-	                        <label for="down-passphrase">Passphrase: *</label>
+	                        <label for="down-access-key">Access Key: *</label>
 							<div class="input-group">
-	                            <input required id="down-passphrase" name="down-passphrase" class="form-control" />
+	                            <input required id="down-access-key" name="down-access-key" class="form-control" />
 							    <div class="input-group-btn">
 							        <button type="submit" id="btn-down" class="btn btn-primary">
 							            <span class="glyphicon glyphicon-download-alt"></span>
@@ -96,8 +96,8 @@
 						    <label for="del-passphrase">Passphrase: *</label>
 	                        <input id="del-passphrase" name="del-passphrase" required class="form-control" />
 	                        <br />
-	                        <label for="del-adminkey">Admin Key: *</label>
-	                        <input id="del-adminkey" name="del-adminkey" required class="form-control" />
+	                        <label for="del-access-key">Access Key: *</label>
+	                        <input id="del-access-key" name="del-access-key" required class="form-control" />
 	                        <br />
 	                        <button type="submit" id="btn-delete" class="btn btn-primary btn-lg btn-block">
 	                           <span class="glyphicon glyphicon-floppy-remove"></span> Delete
