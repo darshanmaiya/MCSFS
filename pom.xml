@@ -41,6 +41,11 @@
 		    <artifactId>tomcat-embed-core</artifactId>
 		    <version>8.5.0</version>
 		</dependency> -->
+        <dependency>
+		    <groupId>com.tiemens</groupId>
+		    <artifactId>secretshare</artifactId>
+		    <version>1.4.2</version>
+		</dependency>
     </dependencies>
     <build>
 	    <finalName>MCSFS</finalName>

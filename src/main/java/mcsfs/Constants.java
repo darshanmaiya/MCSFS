@@ -25,4 +25,11 @@ public class Constants {
 	public static final int BUFFER_SIZE = 4096;
 	
 	public static final String DELIMITER_IN_FILENAME = "___";
+	
+	// Options for Secretshare library
+	public static final String NUMBER_OF_SPLITS = "3";
+	public static final String QUORUM_VALUE = "2";
+	public static final String QUORUM_SWITCH = "-k";
+	public static final String NUM_SPLITS_SWITCH = "-n";
+	public static final String FILE_NAME_SWITCH = "-sS";
 }

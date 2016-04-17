@@ -17,6 +17,8 @@
 package mcsfs;
 
 import java.io.*;
+import java.lang.reflect.Field;
+import java.util.List;
 import java.util.logging.*;
 
 import javax.servlet.ServletException;
@@ -27,7 +29,10 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-//import com.tiemens.secretshare.main.cli.*;
+import com.tiemens.secretshare.engine.SecretShare;
+import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
+import com.tiemens.secretshare.main.cli.MainSplit.SplitInput;
+import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
 
 import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
@@ -122,8 +127,32 @@ public class ApplicationServlet extends HttpServlet {
 	        response.getWriter().print("{\"result\": \"success\", \"accessKey\": \""
 	        		+ accessKeyStr + "\"}");
 	        
-	        //String[] args = new String[]{"split", "-k","3","-n", "6", "-sS", "Cat In The Hat"};
-	        //Main.main(args);
+	        // Split the key with (k=2, n=3) using Adi Shamir Secret Sharing Algorithm
+	        String[] args = new String[]{
+	        		Constants.QUORUM_SWITCH, Constants.QUORUM_VALUE,
+	        		Constants.NUM_SPLITS_SWITCH, Constants.NUMBER_OF_SPLITS,
+	        		Constants.FILE_NAME_SWITCH, fileName
+	        	};
+	        
+	        SplitInput input = SplitInput.parse(args);
+	        SplitOutput output = input.output();
+	        
+	        Field splitSecretOutputField = SplitOutput.class.getDeclaredField("splitSecretOutput");
+	        splitSecretOutputField.setAccessible(true);
+	        
+	        SplitSecretOutput splitSecretOutput = (SplitSecretOutput) splitSecretOutputField.get(output);
+	        List<SecretShare.ShareInfo> shares = splitSecretOutput.getShareInfos();
+            
+	        // Write the keys
+            for (SecretShare.ShareInfo share : shares)
+            {
+                File keyPart = new File("mcsfs_keys/part" + share.getIndex() + "/" + accessKeyStr);
+                keyPart.createNewFile();
+    			
+                PrintWriter writer = new PrintWriter(keyPart);
+                writer.println(share.getShare());
+                writer.close();
+            }
 	    } catch (Exception fne) {
 	        fne.printStackTrace();
 	        response.getWriter().print("{\"result\": \"failure\"");
