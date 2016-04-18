@@ -46,6 +46,12 @@
 		    <artifactId>secretshare</artifactId>
 		    <version>1.4.2</version>
 		</dependency>
+
+		<dependency>
+			<groupId>com.google.appengine.tools</groupId>
+			<artifactId>appengine-gcs-client</artifactId>
+			<version>RELEASE</version>
+		</dependency>
     </dependencies>
     <build>
 	    <finalName>MCSFS</finalName>
@@ -74,7 +80,7 @@
 			                <path>/</path>
 			                <enableNaming>false</enableNaming>
 			                <finalName>MCSFS.jar</finalName>
-			                <charset>utf-8</charset>
+			                <!--<charset>utf-8</charset>-->
 			            </configuration>
 			        </execution>
 			    </executions>
