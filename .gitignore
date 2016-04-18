@@ -3,3 +3,6 @@
 
 /.settings/
 /target/
+/.extract/
+/.idea
+MCSFS.iml
