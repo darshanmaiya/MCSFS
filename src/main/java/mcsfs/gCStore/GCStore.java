@@ -1,90 +1,147 @@
 package mcsfs.gcStore;
 
-import com.google.appengine.tools.cloudstorage.*;
+import com.google.api.client.http.InputStreamContent;
+import com.google.api.services.storage.Storage;
+import com.google.api.services.storage.model.Bucket;
+import com.google.api.services.storage.model.ObjectAccessControl;
+import com.google.api.services.storage.model.Objects;
+import com.google.api.services.storage.model.StorageObject;
 import mcsfs.Store;
 import mcsfs.utils.LogUtils;
 
 import java.io.*;
-import java.nio.channels.Channels;
-import java.nio.file.Files;
+import java.security.GeneralSecurityException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class GCStore implements Store{
 
     private static final String LOG_TAG = "GCStore";
 
     /**
-     * This is where back-off parameters are configured. Here it is aggressively retrying with
-     * back-off, up to 10 times but taking no more that 15 seconds total to do so.
+     * Retrieves a file from GCS, stores it in the local file system and returns its absolute path.
      */
-    private GcsService gcsService;
-    /**
-     * Used below to determine the size of chucks to read in. Should be > 1kb and < 10MB
-     */
-    private static final int BUFFER_SIZE = 2 * 1024 * 1024;
-
-    public GCStore(){
-        gcsService = GcsServiceFactory.createGcsService(new RetryParams.Builder()
-                .initialRetryDelayMillis(10)
-                .retryMaxAttempts(10)
-                .totalRetryPeriodMillis(15000)
-                .build());
-        LogUtils.debug(LOG_TAG, "Successfully created GCS service object.");
-    }
-
-
-    /**
-     * Retrieves a file from GCS, stores it in the local file system and returns its path.
-     * If the actual file path in GCS is /gcs/Foo/Bar (i.e. the GCS file named Bar in the bucket Foo), the expected
-     * str value is Bar.
-     */
-
     @Override
-    public String retrieve(String str) throws IOException {
-
-        File localCopy = new File(GCSConstants.GCS_DIRECTORY + str);
-
-        if(!localCopy.exists()) {
-            GcsFilename fileName = toGCSFileName(str);
-            GcsInputChannel readChannel = gcsService.openPrefetchingReadChannel(fileName, 0, BUFFER_SIZE);
-            LogUtils.debug(LOG_TAG, "Successfully initialised GCS read channel.");
-            copyStream(Channels.newInputStream(readChannel), new FileOutputStream(localCopy));
+    public String retrieve(String str) throws IOException, GeneralSecurityException {
+        File localCopy = new File(GCSConstants.GCS_DIRECTORY + "/" + str);
+        if(!localCopy.exists()){
+            localCopy.getParentFile().mkdirs();
+            localCopy.createNewFile();
         }
 
+        Storage client = StorageFactory.getService();
+        Storage.Objects.Get bucketRequest = client.objects().get(GCSConstants.GCS_BUCKET_NAME, toGCSFileName(str));
+
+        bucketRequest.getMediaHttpDownloader().setDirectDownloadEnabled(true);
+        bucketRequest.executeMediaAndDownloadTo(new FileOutputStream(localCopy));
+        LogUtils.debug(LOG_TAG, "Download complete. Path: " + localCopy.getAbsolutePath());
         return localCopy.getAbsolutePath();
     }
 
-    private GcsFilename toGCSFileName(String str) {
+    /**
+     * Uploads a file to GCS.
+     */
+    @Override
+    public void store(File file) throws IOException, GeneralSecurityException {
+        LogUtils.debug(LOG_TAG, "Uploading new file. Name: " + file.getName());
+        uploadFile(file.getName(), GCSConstants.FILE_TYPE, file, GCSConstants.GCS_BUCKET_NAME);
+    }
+
+    /**
+     * Utility function.
+     * @param str
+     * @return
+     */
+    private String toGCSFileName(String str) {
         String[] tokens = str.split("/");
         String fileName = tokens[tokens.length - 1];
         LogUtils.debug(LOG_TAG, "Extracted file name: " + fileName);
 
-        return new GcsFilename(GCSConstants.GCS_BUCKET_NAME, fileName);
+        return fileName;
     }
 
-    @Override
-    public void store(File file) throws IOException {
-        GcsOutputChannel outputChannel =
-                gcsService.createOrReplace(toGCSFileName(file.getAbsolutePath()), GcsFileOptions.getDefaultInstance());
-        LogUtils.debug(LOG_TAG, "Successfully initialised GCS write channel.");
-        copyStream(new FileInputStream(file), Channels.newOutputStream(outputChannel));
+    /**
+     * Uploads data to an object in a bucket.
+     *
+     * @param name the name of the destination object.
+     * @param contentType the MIME type of the data.
+     * @param file the file to upload.
+     * @param bucketName the name of the bucket to create the object in.
+     */
+    private void uploadFile(String name, String contentType, File file, String bucketName) throws IOException,
+            GeneralSecurityException {
+        InputStreamContent contentStream = new InputStreamContent(contentType, new FileInputStream(file));
+        // Setting the length improves upload performance
+        contentStream.setLength(file.length());
+        StorageObject objectMetadata = new StorageObject()
+                // Set the destination object name
+                .setName(name)
+                // Set the access control list to publicly read-only
+                .setAcl(Arrays.asList(
+                        new ObjectAccessControl().setEntity("allUsers").setRole("READER")));
 
-        // Delete local copy.
-        Files.delete(file.toPath());
-        LogUtils.debug(LOG_TAG, "Local copy of file deleted.");
+        // Do the insert
+        Storage client = StorageFactory.getService();
+        Storage.Objects.Insert insertRequest = client.objects().insert(
+                bucketName, objectMetadata, contentStream);
+
+        insertRequest.execute();
+        LogUtils.debug(LOG_TAG, "Successfully uploaded file to bucket.\nName: " + name + "\nBucket name: " +
+                bucketName);
     }
 
-    private void copyStream(InputStream inputStream, OutputStream outputStream) throws IOException {
-        try {
-            byte[] buffer = new byte[BUFFER_SIZE];
-            int bytesRead = inputStream.read(buffer);
-            while (bytesRead != -1) {
-                outputStream.write(buffer, 0, bytesRead);
-                bytesRead = inputStream.read(buffer);
-            }
-        } finally {
-            inputStream.close();
-            outputStream.close();
-            LogUtils.debug(LOG_TAG, "Stream successful.");
-        }
+    /**
+     * Fetch a list of the objects within the given bucket.
+     * @param bucketName
+     * @return a list of the contents of the specified bucket.
+     * @throws IOException
+     * @throws GeneralSecurityException
+     */
+    private static List<StorageObject> listBucket(String bucketName) throws IOException, GeneralSecurityException {
+        Storage client = StorageFactory.getService();
+        Storage.Objects.List listRequest = client.objects().list(bucketName);
+
+        List<StorageObject> results = new ArrayList<StorageObject>();
+        Objects objects;
+
+        // Iterate through each page of results, and add them to our results list.
+        do {
+            objects = listRequest.execute();
+            // Add the items in this page of results to the list we'll return.
+            results.addAll(objects.getItems());
+
+            // Get the next page, in the next iteration of this loop.
+            listRequest.setPageToken(objects.getNextPageToken());
+        } while (null != objects.getNextPageToken());
+
+        return results;
+    }
+
+    /**
+     * Fetches the metadata for the given bucket.
+     *
+     * @param bucketName the name of the bucket to get metadata about.
+     * @return a Bucket containing the bucket's metadata.
+     */
+    private static Bucket getBucket(String bucketName) throws IOException, GeneralSecurityException {
+        Storage client = StorageFactory.getService();
+
+        Storage.Buckets.Get bucketRequest = client.buckets().get(bucketName);
+        // Fetch the full set of the bucket's properties (e.g. include the ACLs in the response)
+        bucketRequest.setProjection("full");
+        return bucketRequest.execute();
+    }
+
+    /**
+     * Deletes an object in a bucket.
+     *
+     * @param path the path to the object to delete.
+     * @param bucketName the bucket the object is contained in.
+     */
+    private static void deleteObject(String path, String bucketName)
+            throws IOException, GeneralSecurityException {
+        Storage client = StorageFactory.getService();
+        client.objects().delete(bucketName, path).execute();
     }
 }

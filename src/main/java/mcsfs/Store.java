@@ -2,6 +2,7 @@ package mcsfs;
 
 import java.io.File;
 import java.io.IOException;
+import java.security.GeneralSecurityException;
 
 public interface Store {
     /**
@@ -9,12 +10,11 @@ public interface Store {
      * @param str
      * @return Absolute path of the file in the local filesystem.
      */
-    public String retrieve(String str) throws IOException;
+    public String retrieve(String str) throws IOException, GeneralSecurityException;
 
     /**
-     * Store file to storage location and delete local copy. (To keep garbage collection simple.)
+     * Store file to storage location.
      * @param file
-     * @return Success/Failure
      */
-    public void store(File file) throws IOException;
+    public void store(File file) throws IOException, GeneralSecurityException;
 }
