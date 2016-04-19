@@ -1,7 +1,7 @@
 package mcsfs;
 
 /**
- * For project-wide configurations. // TODO
+ * Project-wide configurations. // TODO
  */
 
 public class Config {
