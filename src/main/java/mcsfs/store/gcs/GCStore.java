@@ -1,4 +1,4 @@
-package mcsfs.gcStore;
+package mcsfs.store.gcs;
 
 import com.google.api.client.http.InputStreamContent;
 import com.google.api.services.storage.Storage;
@@ -6,7 +6,8 @@ import com.google.api.services.storage.model.Bucket;
 import com.google.api.services.storage.model.ObjectAccessControl;
 import com.google.api.services.storage.model.Objects;
 import com.google.api.services.storage.model.StorageObject;
-import mcsfs.Store;
+
+import mcsfs.store.Store;
 import mcsfs.utils.LogUtils;
 
 import java.io.*;

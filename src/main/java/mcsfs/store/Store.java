@@ -1,4 +1,4 @@
-package mcsfs;
+package mcsfs.store;
 
 import java.io.File;
 import java.io.IOException;

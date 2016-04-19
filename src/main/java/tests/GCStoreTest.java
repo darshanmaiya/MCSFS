@@ -1,9 +1,10 @@
 package tests;
 
 import com.google.api.services.storage.Storage;
-import mcsfs.Store;
-import mcsfs.gcStore.GCSConstants;
-import mcsfs.gcStore.GCStore;
+
+import mcsfs.store.Store;
+import mcsfs.store.gcs.GCSConstants;
+import mcsfs.store.gcs.GCStore;
 import mcsfs.utils.LogUtils;
 
 import java.io.*;

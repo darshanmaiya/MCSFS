@@ -1,4 +1,4 @@
-package mcsfs.gcStore;
+package mcsfs.store.gcs;
 
 import mcsfs.Config;
 
