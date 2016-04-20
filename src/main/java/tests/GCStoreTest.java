@@ -1,7 +1,5 @@
 package tests;
 
-import com.google.api.services.storage.Storage;
-
 import mcsfs.store.Store;
 import mcsfs.store.gcs.GCSConstants;
 import mcsfs.store.gcs.GCStore;
@@ -10,7 +8,6 @@ import mcsfs.utils.LogUtils;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
-import java.security.GeneralSecurityException;
 import java.util.Arrays;
 import java.util.Scanner;
 
@@ -19,7 +16,7 @@ public class GCStoreTest {
     private static final String fileName = "this_is_a_test5.txt";
     private static final String directory = "/Users/aviral/Desktop/";
 
-    public static void main(String[] args) throws IOException, GeneralSecurityException{
+    public static void main(String[] args) throws Exception{
         Store store = new GCStore();
         File file = new File(directory + fileName);
         file.getParentFile().mkdirs();

@@ -17,10 +17,6 @@
 package mcsfs;
 
 import java.io.*;
-import java.lang.reflect.Field;
-import java.math.BigInteger;
-import java.util.List;
-import java.util.Scanner;
 import java.util.logging.*;
 
 import javax.servlet.ServletException;
@@ -31,14 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
-import com.tiemens.secretshare.engine.SecretShare;
-import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
-import com.tiemens.secretshare.main.cli.MainCombine.CombineInput;
-import com.tiemens.secretshare.main.cli.MainCombine.CombineOutput;
-import com.tiemens.secretshare.main.cli.MainSplit.SplitInput;
-import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
-import com.tiemens.secretshare.math.BigIntUtilities;
-
+import mcsfs.store.StorageManager;
 import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
 
@@ -66,44 +55,13 @@ public class ApplicationServlet extends HttpServlet {
 			throws ServletException, IOException {
 		
 		OutputStream out = null;
-		Scanner in = null;
 		
 		try {
 			String downAccessKey = request.getParameter("down-access-key");
 			
-			int numSplits = Integer.parseInt(Constants.NUMBER_OF_SPLITS);
-			String[] args = new String[]{
-	        		Constants.QUORUM_SWITCH, Constants.QUORUM_VALUE,
-	        		"", "",
-	        		"", ""
-	        	};
+			String fileName = StorageManager.retrieveKey(downAccessKey);
+			File encFile = StorageManager.retrieveFile(downAccessKey);
 			
-			// Reading only two for now
-			for(int i=1; i<numSplits; i++) {
-				File keyPart = new File("mcsfs_keys/part" + i + "/" + downAccessKey);
-	            if(!keyPart.exists())
-	            	throw new Exception("File not found with access key: " + downAccessKey);
-	            
-	            in = new Scanner(keyPart);
-				String contents;
-				contents = in.nextLine();
-	            args[i*2] = "-s" + i;
-	            args[i*2 + 1] = contents;
-	            
-	            in.close();
-			}
-			
-			// Combine the fields to get the filename
-			CombineInput input = CombineInput.parse(args, null, null);
-            CombineOutput output = input.output();
-	        
-	        Field secretField = CombineOutput.class.getDeclaredField("secret");
-	        secretField.setAccessible(true);
-	        
-	        BigInteger secret = (BigInteger) secretField.get(output);
-	        
-	        // Retrieve file name and user file name
-	        String fileName = BigIntUtilities.Human.createHumanString(secret);
 	        String userFileName = fileName.substring(
 	        	fileName.indexOf(Constants.DELIMITER_IN_FILENAME) + Constants.DELIMITER_IN_FILENAME.length(),
 				fileName.lastIndexOf(Constants.DELIMITER_IN_FILENAME));
@@ -111,15 +69,10 @@ public class ApplicationServlet extends HttpServlet {
 	        // Retrieve file and decrypt it
 	        byte[] secretKey = new byte[Constants.ACCESS_KEY_LENGTH];
 	    	byte[] accessKey = new byte[Constants.ACCESS_KEY_LENGTH];
-	    	String accessKeyStr = null;
 	    	
 	    	CryptUtils.getKeys(fileName, secretKey, accessKey);
-
-	    	int[] accessKeyInt = ConversionUtils.byteArrayToIntArray(accessKey);
-	    	accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
 	    	
-	        File encFile = new File("mcsfs_files/" + accessKeyStr + ".enc");
-	        File decFile = new File("mcsfs_files/" + userFileName);
+	        File decFile = new File(Constants.MCSFS_WORKING_DIR + userFileName);
 	        decFile.createNewFile();
 	        CryptUtils.decrypt(secretKey, encFile, decFile);
 	        
@@ -144,9 +97,6 @@ public class ApplicationServlet extends HttpServlet {
 			
 			response.getWriter().print("No such file found or internal server error.");
 		} finally {
-			if(in != null)
-				in.close();
-			
 			if(out != null) {
 				out.flush();
 				out.close();
@@ -174,16 +124,15 @@ public class ApplicationServlet extends HttpServlet {
 	    InputStream fileContent = null;
 
 	    try {
-	    	byte[] secretKey = new byte[Constants.ACCESS_KEY_LENGTH];
-	    	byte[] accessKey = new byte[Constants.ACCESS_KEY_LENGTH];
-	    	String accessKeyStr = null;
-	    	
-	    	CryptUtils.getKeys(fileName, secretKey, accessKey);
-
-	    	int[] accessKeyInt = ConversionUtils.byteArrayToIntArray(accessKey);
-	    	accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
-	    	
-	    	File inputFile = new File("mcsfs_files/" + accessKeyStr);
+	    	// Check if working directory exists, if not create it
+	    	// Working directory will be used to temporarily store uploaded files until
+	    	// they are encrypted and stored. Then the files will be deleted
+	    	File workingDir = new File(Constants.MCSFS_WORKING_DIR);
+	        if (!workingDir.exists())
+	            workingDir.mkdir();
+	        
+	    	// Read the uploaded file from client
+	    	File inputFile = new File(Constants.MCSFS_WORKING_DIR + fileName);
 	    	byte[] readBuffer = new byte[Constants.BUFFER_SIZE];
 	    	
 	    	out = new FileOutputStream(inputFile);
@@ -196,45 +145,36 @@ public class ApplicationServlet extends HttpServlet {
 	        	out.write(readBuffer, 0, read);
 	        }
 	        
-	        File encFile = new File("mcsfs_files/" + accessKeyStr + ".enc");
+	        byte[] secretKey = new byte[Constants.ACCESS_KEY_LENGTH];
+	    	byte[] accessKey = new byte[Constants.ACCESS_KEY_LENGTH];
+	    	String accessKeyStr = null;
+	    	 
+	    	// Get the accessKey and secretKey in byte[] format from the generated file name
+	    	CryptUtils.getKeys(fileName, secretKey, accessKey);
+
+	    	int[] accessKeyInt = ConversionUtils.byteArrayToIntArray(accessKey);
+	    	accessKeyStr = ConversionUtils.intArrayToMixedString(accessKeyInt);
+	    	
+	        File encFile = new File(Constants.MCSFS_WORKING_DIR + accessKeyStr);
 	        CryptUtils.encrypt(secretKey, inputFile, encFile);
 	        
+	        // Delete uploaded file
 	        inputFile.delete();
+	        
+	        // TODO: Use separate threads for operations below
+	        StorageManager.storeKey(accessKeyStr, fileName);
+	        StorageManager.storeFile(encFile);
 	        
 	        //File decFile = new File("mcsfs_files/" + getFileName(filePart));
 	        //CryptUtils.decrypt(secretKey, encFile, decFile);
+	        
+	        // Delete encrypted file
+	        encFile.delete();
 
 	        response.getWriter().print("{\"result\": \"success\", \"accessKey\": \""
 	        		+ accessKeyStr + "\"}");
-	        
-	        // Split the key with (k=2, n=3) using Adi Shamir Secret Sharing Algorithm
-	        String[] args = new String[]{
-	        		Constants.QUORUM_SWITCH, Constants.QUORUM_VALUE,
-	        		Constants.NUM_SPLITS_SWITCH, Constants.NUMBER_OF_SPLITS,
-	        		Constants.FILE_NAME_SWITCH, fileName
-	        	};
-	        
-	        SplitInput input = SplitInput.parse(args);
-	        SplitOutput output = input.output();
-	        
-	        Field splitSecretOutputField = SplitOutput.class.getDeclaredField("splitSecretOutput");
-	        splitSecretOutputField.setAccessible(true);
-	        
-	        SplitSecretOutput splitSecretOutput = (SplitSecretOutput) splitSecretOutputField.get(output);
-	        List<SecretShare.ShareInfo> shares = splitSecretOutput.getShareInfos();
-            
-	        // Write the keys
-            for (SecretShare.ShareInfo share : shares)
-            {
-                File keyPart = new File("mcsfs_keys/part" + share.getIndex() + "/" + accessKeyStr);
-                keyPart.createNewFile();
-    			
-                PrintWriter writer = new PrintWriter(keyPart);
-                writer.println(share.getShare());
-                writer.close();
-            }
-	    } catch (Exception fne) {
-	        fne.printStackTrace();
+	    } catch (Exception e) {
+	        e.printStackTrace();
 	        response.getWriter().print("{\"result\": \"failure\"");
 	    } finally {
 	        if (out != null) {
@@ -253,7 +193,8 @@ public class ApplicationServlet extends HttpServlet {
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) 
 			throws ServletException, IOException {
 		
-		String passphrase = request.getParameter("del-passphrase");
+		throw new ServletException("Unimplemented method: ApplicationServlet#doDelete");
+		/*String passphrase = request.getParameter("del-passphrase");
 		String adminkey = request.getParameter("del-adminkey");
 		System.out.println(passphrase);
 		System.out.println(adminkey);
@@ -262,8 +203,8 @@ public class ApplicationServlet extends HttpServlet {
 		if(file.delete()) {
 			System.out.println(file.getName() + " is deleted!");
 		} else {
-			System.out.println("Delete operation is failed.");
-		}
+			System.out.println("Delete operation failed.");
+		}*/
 	}
 
 	private String getFileName(final Part part) {

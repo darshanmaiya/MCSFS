@@ -145,4 +145,10 @@ public class GCStore implements Store{
         Storage client = StorageFactory.getService();
         client.objects().delete(bucketName, path).execute();
     }
+
+	@Override
+	public void remove(String accessKey) {
+		// TODO Auto-generated method stub
+		
+	}
 }
