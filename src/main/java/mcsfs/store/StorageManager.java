@@ -32,15 +32,16 @@ import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
 import com.tiemens.secretshare.math.BigIntUtilities;
 
 import mcsfs.Constants;
+import mcsfs.store.azure.AzureStore;
 import mcsfs.store.fs.FSStore;
+import mcsfs.store.gcs.GCStore;
+import mcsfs.store.s3.S3Store;
 
 public class StorageManager {
 	
 	private static Store[] fsStore = {new FSStore(1), new FSStore(2), new FSStore(3)};
-	// TODO: Declare reference to store objects here
-	// private static Store gcStore = new GCSStore();
-	// private static Store s3Store = new S3Store();
-	// private static Store azureStore = new AzureStore();
+	
+	private static Store[] cloudStore = {new GCStore(), new S3Store(), new S3Store()};
 	
 	public static void storeKey(String accessKey, String keyToStore) 
 		throws Exception {
@@ -78,11 +79,10 @@ public class StorageManager {
 	            fsStore[shareIndex-1].store(keyPart);
         	}
         	
+        	// Write to rest of data stores here
+        	cloudStore[shareIndex-1].store(keyPart);
+        	
         	keyPart.delete();
-        	// TODO: Write to rest of data stores here
-        	// gcStore.store(keyPart);
-        	// s3Store.store(keyPart);
-        	// azureStore.store(keyPart);
         }
 	}
 	
@@ -144,16 +144,12 @@ public class StorageManager {
 			throws Exception {
 		
 		// Store file in all data stores
-		if(Constants.DEPLOY_ON_FILE_SYSTEM) {
-			for(int i=0; i<3; i++) {
+		for(int i=0; i<3; i++) {
+			if(Constants.DEPLOY_ON_FILE_SYSTEM) {
 				fsStore[i].store(fileToStore);
 			}
+			cloudStore[i].store(fileToStore);
 		}
-		
-		// TODO: Write to rest of data stores here
-    	// gcStore.store(fileToStore);
-    	// s3Store.store(fileToStore);
-    	// azureStore.store(fileToStore);
 	}
 	
 	public static File retrieveFile(String accessKey) 

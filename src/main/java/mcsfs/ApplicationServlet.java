@@ -30,6 +30,7 @@ import javax.servlet.http.Part;
 import mcsfs.store.StorageManager;
 import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
+import mcsfs.utils.LogUtils;
 
 /**
  * Servlet implementation class ServiceServlet
@@ -47,6 +48,11 @@ public class ApplicationServlet extends HttpServlet {
     public ApplicationServlet() {
         super();
     }
+
+	@Override
+	public void init() throws ServletException {
+		LogUtils.setLogLevel(3);
+	}
 
 	/**
 	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)

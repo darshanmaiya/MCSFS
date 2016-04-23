@@ -1,6 +1,6 @@
-package mcsfs.store;
+package mcsfs.store.azure;
 
-import mcsfs.Store;
+import mcsfs.store.Store;
 import mcsfs.utils.LogUtils;
 
 import com.microsoft.azure.storage.*;
@@ -66,6 +66,12 @@ public class AzureStore implements Store {
             e.printStackTrace();
         }
     }
+
+	@Override
+	public void remove(String accessKey) throws Exception {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
 
