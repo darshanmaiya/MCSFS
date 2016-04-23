@@ -20,14 +20,14 @@ RUN add-apt-repository ppa:webupd8team/java && \
     apt-get install -yy oracle-java8-installer && \
     apt-get install -yy oracle-java8-set-default
 
-# get source 
-RUN wget https://github.com/darshanmaiya/MCSFS/archive/master.tar.gz && \
-    tar xf master.tar.gz && \
-    cd MCSFS-master && \
-    mvn clean install && \
-    cd target
-
-CMD java -jar MCSFS-master/target/MCSFS.jar
-
+# copy source
+RUN mkdir /MCSFS
+COPY . /MCSFS
+WORKDIR /MCSFS
+RUN mvn clean install
+WORKDIR /MCSFS/target
 
 EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "/MCSFS/target/MCSFS.jar"]
+
