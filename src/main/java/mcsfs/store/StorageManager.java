@@ -139,18 +139,20 @@ public class StorageManager {
 		} else {
 			// Retrieve key from providers simultaneously. Two replies are enough.
 			ConcurrentMap<String, File> map = new ConcurrentHashMap<>();
+            ExecutorService pool = Executors.newFixedThreadPool(3);
 
-			ThreadUtils.startThreadWithName(new FileRetriever(new GCStore(), accessKey + "_key", map),
-					"GCStore");
-			ThreadUtils.startThreadWithName(new FileRetriever(new S3Store(), accessKey + "_key", map),
-					"S3Store");
-			ThreadUtils.startThreadWithName(new FileRetriever(new AzureStore(), accessKey + "_key", map),
-					"AzureStore");
+            Future gcStore = pool.submit(new FileRetriever(new GCStore(), accessKey + "_key", map));
+            Future s3Store = pool.submit(new FileRetriever(new S3Store(), accessKey + "_key", map));
+            Future azureStore = pool.submit(new FileRetriever(new AzureStore(), accessKey + "_key", map));
 
 			while(map.size() < 2)
 				ThreadUtils.sleepQuietly(Constants.EXPECTED_READ_LATENCY);
 
 			LogUtils.debug(LOG_TAG, "At least two files successfully read. Map: " + map);
+
+            gcStore.cancel(true);
+            azureStore.cancel(true);
+            s3Store.cancel(true);
 
 			// At least two threads have returned. Populate args as above.
 			int i = 1;
