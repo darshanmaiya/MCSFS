@@ -36,9 +36,11 @@ public class Constants {
 	public static final String NUM_SPLITS_SWITCH = "-n";
 	public static final String FILE_NAME_SWITCH = "-sS";
 
-	public static final boolean DEPLOY_ON_FILE_SYSTEM = true;
+	public static final boolean DEPLOY_ON_FILE_SYSTEM = false;
 	public static final int EXPECTED_READ_LATENCY = 10; // In milliseconds.
 	public static final int EXPECTED_WRITE_LATENCY = 10; // In milliseconds.
 	public static final int READ_ATTEMPTS = 3;
 	public static final int MAX_READ_WAIT_TIME_IN_SECONDS = 10;
+
+	public static final boolean TEST_GCS_ONLY = false;
 }

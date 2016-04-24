@@ -21,10 +21,9 @@ import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Map;
-import java.util.Random;
-import java.util.Scanner;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.*;
 import java.util.concurrent.*;
 
 import com.tiemens.secretshare.engine.SecretShare;
@@ -69,7 +68,7 @@ public class StorageManager {
         SplitSecretOutput splitSecretOutput = (SplitSecretOutput) splitSecretOutputField.get(output);
         List<SecretShare.ShareInfo> shares = splitSecretOutput.getShareInfos();
 		Semaphore semaphore = new Semaphore(3);
-		List<File> temp; // Garbage collect these files once the threads return.
+		List<File> temp = new ArrayList<>(); // Garbage collect these files once the threads return.
 
 		// Write the keys to all the data stores
         for (SecretShare.ShareInfo share : shares)
@@ -78,6 +77,7 @@ public class StorageManager {
         	BigInteger splitShare = share.getShare();
 
         	File keyPart = new File(Constants.MCSFS_WORKING_DIR + accessKey + "_key");
+            keyPart.getParentFile().mkdirs();
             keyPart.createNewFile();
 			
             PrintWriter writer = new PrintWriter(keyPart);
@@ -150,7 +150,7 @@ public class StorageManager {
 			while(map.size() < 2)
 				ThreadUtils.sleepQuietly(Constants.EXPECTED_READ_LATENCY);
 
-			LogUtils.debug(LOG_TAG, "At least two files successfully read. Size of map: " + map.size());
+			LogUtils.debug(LOG_TAG, "At least two files successfully read. Map: " + map);
 
 			// At least two threads have returned. Populate args as above.
 			int i = 1;
@@ -211,7 +211,7 @@ public class StorageManager {
 	 * @return File corresponding to access key.
 	 * @throws Exception
      */
-	public static File retrieveFile(String accessKey) 
+	public File retrieveFile(String accessKey)
 			throws Exception {
 
 		if(Constants.DEPLOY_ON_FILE_SYSTEM)
@@ -221,7 +221,11 @@ public class StorageManager {
 		int i = Constants.READ_ATTEMPTS;
 		while(i > 0) {
 			Callable callable = () -> {
-				Store store = cloudStore[new Random().nextInt() % 3];
+                Store store = cloudStore[Math.abs(new Random().nextInt() % 3)];
+
+                if(Constants.TEST_GCS_ONLY)
+                    store = cloudStore[0];
+
 				LogUtils.debug(LOG_TAG + " " + "retrieveFile ", "Retrieving file from " + store.getClass());
 				try {
 					String absPath = store.retrieve(accessKey);
@@ -257,7 +261,17 @@ public class StorageManager {
 		@Override
 		public void run() {
 			try{
-				map.put(provider.getClass().toString(), new File(provider.retrieve(fileName)));
+                if(Constants.TEST_GCS_ONLY && (provider.getClass() == AzureStore.class || provider.getClass() == S3Store
+                        .class)){
+                    LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Simulating call to " + provider.getClass());
+                    Thread.sleep(Math.abs(new Random().nextInt() % Constants.MAX_READ_WAIT_TIME_IN_SECONDS));
+                    File file = new File("/Users/aviral/Hogwarts/CS-293B/MCSFS/temp");
+                    file.createNewFile();
+                    Files.write(file.toPath(), Arrays.asList("This_is_a_dummy_file."), Charset.forName("UTF-8"));
+                    map.put(provider.getClass().toString(), file);
+                    return;
+                }
+                map.put(provider.getClass().toString(), new File(provider.retrieve(fileName)));
 			}
 			catch(Exception e){
 				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving file from " +
@@ -282,6 +296,12 @@ public class StorageManager {
 		public void run() {
 			try{
 				semaphore.acquire();
+				if( Constants.TEST_GCS_ONLY && (provider.getClass() == AzureStore.class || provider.getClass() ==
+                        S3Store.class)){
+					LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Simulating call to ." + provider.getClass());
+					Thread.sleep(Math.abs(new Random().nextInt() % Constants.MAX_READ_WAIT_TIME_IN_SECONDS));
+					return;
+				}
 				provider.store(file);
 			}
 			catch (Exception e){

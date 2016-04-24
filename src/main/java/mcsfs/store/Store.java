@@ -21,5 +21,5 @@ public interface Store {
      * @param accessKey
      * @throws Exception
      */
-   // public void remove(String accessKey) throws Exception;
+    public void remove(String accessKey) throws Exception;
 }
