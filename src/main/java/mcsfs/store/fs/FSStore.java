@@ -44,7 +44,7 @@ public class FSStore implements Store {
 		Files.copy(file.toPath(), destination.toPath(), REPLACE_EXISTING);
 	}
 
-	@Override
+	//@Override
 	public void remove(String accessKey) {
 		new File(accessKey).delete();
 	}

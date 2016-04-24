@@ -41,6 +41,7 @@ public class ApplicationServlet extends HttpServlet {
 	private static final long serialVersionUID = 1L;
 	private final static Logger LOGGER = 
             Logger.getLogger(ApplicationServlet.class.getCanonicalName());
+	private StorageManager storageManager;
        
     /**
      * @see HttpServlet#HttpServlet()
@@ -52,6 +53,7 @@ public class ApplicationServlet extends HttpServlet {
 	@Override
 	public void init() throws ServletException {
 		LogUtils.setLogLevel(3);
+		storageManager = new StorageManager();
 	}
 
 	/**
@@ -65,8 +67,8 @@ public class ApplicationServlet extends HttpServlet {
 		try {
 			String downAccessKey = request.getParameter("down-access-key");
 			
-			String fileName = StorageManager.retrieveKey(downAccessKey);
-			File encFile = StorageManager.retrieveFile(downAccessKey);
+			String fileName = storageManager.retrieveKey(downAccessKey);
+			File encFile = storageManager.retrieveFile(downAccessKey);
 			
 	        String userFileName = fileName.substring(
 	        	fileName.indexOf(Constants.DELIMITER_IN_FILENAME) + Constants.DELIMITER_IN_FILENAME.length(),
@@ -168,8 +170,8 @@ public class ApplicationServlet extends HttpServlet {
 	        inputFile.delete();
 	        
 	        // TODO: Use separate threads for operations below
-	        StorageManager.storeKey(accessKeyStr, fileName);
-	        StorageManager.storeFile(encFile);
+	        storageManager.storeKey(accessKeyStr, fileName);
+	        storageManager.storeFile(encFile);
 	        
 	        //File decFile = new File("mcsfs_files/" + getFileName(filePart));
 	        //CryptUtils.decrypt(secretKey, encFile, decFile);

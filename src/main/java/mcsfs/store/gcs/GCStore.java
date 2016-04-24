@@ -146,7 +146,7 @@ public class GCStore implements Store{
         client.objects().delete(bucketName, path).execute();
     }
 
-	@Override
+	//@Override
 	public void remove(String accessKey) {
 		// TODO Auto-generated method stub
 		
