@@ -28,7 +28,7 @@ public class S3Store implements Store {
         LogUtils.debug(LOG_TAG, "Successfully downloaded file from bucket.\nName: " + file + "\nBucket name: " +
                 bucketName);
         tm.shutdownNow();
-		return null;
+		return downloadedFile.getAbsolutePath();
 	}
 
 	@Override
