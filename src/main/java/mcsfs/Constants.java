@@ -37,4 +37,7 @@ public class Constants {
 	public static final String FILE_NAME_SWITCH = "-sS";
 	
 	public static final boolean DEPLOY_ON_FILE_SYSTEM = true;
+	
+	// S3 Constants
+	public static final String S3_BUCKET_NAME = "mcsfs-files";
 }
