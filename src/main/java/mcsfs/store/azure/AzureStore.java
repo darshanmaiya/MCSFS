@@ -1,77 +1,86 @@
 package mcsfs.store.azure;
 
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.URISyntaxException;
+import java.security.GeneralSecurityException;
+import java.security.InvalidKeyException;
+
 import mcsfs.store.Store;
 import mcsfs.utils.LogUtils;
 
-import com.microsoft.azure.storage.*;
-import com.microsoft.azure.storage.blob.*;
-
-import java.io.*;
-import java.security.GeneralSecurityException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
+import com.microsoft.azure.storage.CloudStorageAccount;
+import com.microsoft.azure.storage.StorageException;
+import com.microsoft.azure.storage.blob.CloudBlobClient;
+import com.microsoft.azure.storage.blob.CloudBlobContainer;
+import com.microsoft.azure.storage.blob.CloudBlockBlob;
 
 public class AzureStore implements Store {
-    
-    private static final String LOG_TAG = "AzureStore";
-    private static final String ACCOUNT_NAME = "";
-    private static final String ACCOUNT_KEY = "";
-    private static final String CONTAINER_NAME = "container";
 
-    private CloudBlobContainer container;
-        
-    public AzureStore() {
-        try {
-            CloudStorageAccount account = CloudStorageAccount.parse("DefaultEndpointsProtocol=http;" + "AccountName=" + ACCOUNT_NAME + ";" + "AccountKey=" + ACCOUNT_KEY);
-            CloudBlobClient serviceClient = account.createCloudBlobClient();
-            container = serviceClient.getContainerReference(CONTAINER_NAME);
-            container.createIfNotExists();
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	private static final String LOG_TAG = "AzureStore";
 
-    /**
-     * Retrieves a file from Azure, stores it in the local file system and returns its absolute path.
-     */
-    @Override
-    public String retrieve(String str) throws IOException, GeneralSecurityException {
-        try {
-            for (ListBlobItem blobItem : container.listBlobs()) {
-                if (blobItem instanceof CloudBlob) {
-                    CloudBlob blob = (CloudBlob) blobItem;
-                    if (blob.getName().equals(str)) {
-                        blob.download(new FileOutputStream("~/" + str));
-                    }
-                }
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-            return "";
-        }
-        return "~/" + str;
-    }
+	private CloudBlobContainer container;
 
-    /**
-     * Uploads a file to Azure.
-     */
-    @Override
-    public void store(File file) throws IOException, GeneralSecurityException {
-        try {
-            LogUtils.debug(LOG_TAG, "Uploading new file. Name: " + file.getName());
-            CloudBlockBlob blob = container.getBlockBlobReference(file.getName());
-            blob.upload(new FileInputStream(file), file.length());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-    }
+	public AzureStore() throws InvalidKeyException, URISyntaxException,
+			StorageException {
+		CloudStorageAccount account = CloudStorageAccount
+				.parse("DefaultEndpointsProtocol=http;" + "AccountName="
+						+ AzureConstants.AZURE_ACCOUNT_NAME + ";"
+						+ "AccountKey=" + AzureConstants.AZURE_ACCOUNT_KEY);
+		CloudBlobClient serviceClient = account.createCloudBlobClient();
+		container = serviceClient
+				.getContainerReference(AzureConstants.AZURE_CONTAINER_NAME);
+		container.createIfNotExists();
+	}
 
+	/**
+	 * Retrieves a file from Azure, stores it in the local file system and
+	 * returns its absolute path.
+	 * 
+	 * @throws StorageException
+	 * @throws URISyntaxException
+	 */
 	@Override
-	public void remove(String accessKey) throws Exception {
-		// TODO Auto-generated method stub
-		
+	public String retrieve(String str) throws IOException,
+			GeneralSecurityException, StorageException, URISyntaxException {
+		File localCopy = new File(AzureConstants.AZURE_DIRECTORY + "/" + str);
+		if (!localCopy.exists()) {
+			localCopy.getParentFile().mkdirs();
+			localCopy.createNewFile();
+		}
+		System.out.println(localCopy.getAbsolutePath());
+		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
+		if (blobSource.exists()) {
+			blobSource.download(new FileOutputStream(localCopy));
+		}
+		LogUtils.debug(LOG_TAG, "File " + str + " was downloaded to "
+				+ AzureConstants.AZURE_DIRECTORY + " .");
+		return AzureConstants.AZURE_DIRECTORY + "/" + str;
+	}
+
+	/**
+	 * Uploads a file to Azure.
+	 * 
+	 * @throws StorageException
+	 * @throws URISyntaxException
+	 */
+	@Override
+	public void store(File file) throws IOException, GeneralSecurityException,
+			StorageException, URISyntaxException {
+		CloudBlockBlob blob = container.getBlockBlobReference(file.getName());
+		blob.upload(new FileInputStream(file), file.length());
+		LogUtils.debug(LOG_TAG, "File " + file.getName() + " was uploaded.");
+	}
+
+	/**
+	 * Delete a file on Azure storeage.
+	 */
+	@Override
+	public void remove(String str) throws Exception {
+		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
+		blobSource.deleteIfExists();
 	}
 
 }
-

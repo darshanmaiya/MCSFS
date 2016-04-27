@@ -43,4 +43,7 @@ public class Constants {
 	public static final int MAX_READ_WAIT_TIME_IN_SECONDS = 10;
 
 	public static final boolean TEST_GCS_ONLY = true;
+
+	// S3 Constants
+	public static final String S3_BUCKET_NAME = "mcsfs-files";
 }
