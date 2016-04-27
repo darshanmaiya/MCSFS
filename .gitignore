@@ -5,12 +5,8 @@
 /.extract/
 /.idea
 MCSFS.iml
-<<<<<<< Updated upstream
-/src/main/java/mcsfs/gcStore/uber-293b-2cbb4319a6f4.json
 /src/main/java/mcsfs/store/azure/AzureConstants.java
-=======
 /mcsfs/store/gcs/uber-293b-2cbb4319a6f4.json
 mcsfs_files/
 mcsfs_working_dir/
 temp
->>>>>>> Stashed changes
