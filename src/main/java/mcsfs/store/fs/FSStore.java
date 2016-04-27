@@ -23,11 +23,13 @@ import static java.nio.file.StandardCopyOption.*;
 
 import mcsfs.Constants;
 import mcsfs.store.Store;
+import mcsfs.utils.LogUtils;
 
 public class FSStore implements Store {
 	
 	private String storeDir = Constants.MCSFS_FILES_DIR + Constants.MCSFS_FILES_STORE_DIR;
-			
+	private static final String LOG_TAG = "FSStore";
+
 	public FSStore(int id) {
 		storeDir = storeDir.replace("{0}", String.valueOf(id));
 	}
@@ -40,6 +42,8 @@ public class FSStore implements Store {
 	@Override
 	public void store(File file) throws Exception {
 		File destination = new File(storeDir + file.getName());
+		LogUtils.debug(LOG_TAG, "Creating file at " + destination.getAbsolutePath());
+		destination.getParentFile().mkdirs();
 		destination.createNewFile();
 		Files.copy(file.toPath(), destination.toPath(), REPLACE_EXISTING);
 	}

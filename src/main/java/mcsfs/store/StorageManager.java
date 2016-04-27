@@ -17,11 +17,14 @@
 package mcsfs.store;
 
 import java.io.File;
+import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
-import java.util.List;
-import java.util.Scanner;
+import java.nio.charset.Charset;
+import java.nio.file.Files;
+import java.util.*;
+import java.util.concurrent.*;
 
 import com.tiemens.secretshare.engine.SecretShare;
 import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
@@ -36,14 +39,18 @@ import mcsfs.store.azure.AzureStore;
 import mcsfs.store.fs.FSStore;
 import mcsfs.store.gcs.GCStore;
 import mcsfs.store.s3.S3Store;
+import mcsfs.utils.LogUtils;
+import mcsfs.utils.ThreadUtils;
 
 public class StorageManager {
-	
+
+	private static final String LOG_TAG = "StorageManager";
+
 	private static Store[] fsStore = {new FSStore(1), new FSStore(2), new FSStore(3)};
 	
 	private static Store[] cloudStore = {new GCStore(), new S3Store(), new S3Store()};
 	
-	public static void storeKey(String accessKey, String keyToStore) 
+	public void storeKey(String accessKey, String keyToStore)
 		throws Exception {
 		// Split the key with (k=2, n=3) using Adi Shamir Secret Sharing Algorithm
         String[] args = new String[] {
@@ -60,14 +67,17 @@ public class StorageManager {
         
         SplitSecretOutput splitSecretOutput = (SplitSecretOutput) splitSecretOutputField.get(output);
         List<SecretShare.ShareInfo> shares = splitSecretOutput.getShareInfos();
-        
-        // Write the keys to all the data stores
+		Semaphore semaphore = new Semaphore(3);
+		List<File> temp = new ArrayList<>(); // Garbage collect these files once the threads return.
+
+		// Write the keys to all the data stores
         for (SecretShare.ShareInfo share : shares)
         {
         	int shareIndex = share.getIndex();
         	BigInteger splitShare = share.getShare();
 
         	File keyPart = new File(Constants.MCSFS_WORKING_DIR + accessKey + "_key");
+            keyPart.getParentFile().mkdirs();
             keyPart.createNewFile();
 			
             PrintWriter writer = new PrintWriter(keyPart);
@@ -77,16 +87,28 @@ public class StorageManager {
             // Only write to the file system if testing locally
         	if(Constants.DEPLOY_ON_FILE_SYSTEM) {
 	            fsStore[shareIndex-1].store(keyPart);
+				keyPart.delete();
         	}
-        	
-        	// Write to rest of data stores here
-        	cloudStore[shareIndex-1].store(keyPart);
-        	
-        	keyPart.delete();
+			else{
+				// Write to cloud provider.
+				ThreadUtils.startThreadWithName(new FilePoster(cloudStore[shareIndex-1], keyPart, semaphore),
+						cloudStore[shareIndex-1].getClass().toString());
+				temp.add(keyPart);
+			}
         }
+
+		if(!Constants.DEPLOY_ON_FILE_SYSTEM){
+			// Wait till all threads return.
+			while(semaphore.availablePermits() != 3)
+				ThreadUtils.sleepQuietly(Constants.EXPECTED_WRITE_LATENCY);
+
+			LogUtils.debug(LOG_TAG, "Write to all three providers successful.");
+			for(File file : temp)
+				file.delete();
+		}
 	}
 	
-	public static String retrieveKey(String accessKey) 
+	public String retrieveKey(String accessKey)
 			throws Exception {
 		String retrievedKey = null;
 		
@@ -115,8 +137,31 @@ public class StorageManager {
 	            in.close();
 			}
 		} else {
-			// Read from data stores until two replies are got and make note of IDs from where
-			// replies have come
+			// Retrieve key from providers simultaneously. Two replies are enough.
+			ConcurrentMap<String, File> map = new ConcurrentHashMap<>();
+            ExecutorService pool = Executors.newFixedThreadPool(3);
+
+            Future gcStore = pool.submit(new FileRetriever(new GCStore(), accessKey + "_key", map));
+            Future s3Store = pool.submit(new FileRetriever(new S3Store(), accessKey + "_key", map));
+            Future azureStore = pool.submit(new FileRetriever(new AzureStore(), accessKey + "_key", map));
+
+			while(map.size() < 2)
+				ThreadUtils.sleepQuietly(Constants.EXPECTED_READ_LATENCY);
+
+			LogUtils.debug(LOG_TAG, "At least two files successfully read. Map: " + map);
+
+            gcStore.cancel(true);
+            azureStore.cancel(true);
+            s3Store.cancel(true);
+
+			// At least two threads have returned. Populate args as above.
+			int i = 1;
+			for(Map.Entry<String, File> entry : map.entrySet()){
+				args[i * 2] = "-s" + i;
+				args[i * 2 + 1] = new Scanner(entry.getValue()).nextLine();
+				i++;
+				if(i == 3) break;
+			}
 		}
 		
 		// Combine the fields to get the filename
@@ -140,24 +185,134 @@ public class StorageManager {
 		
 	}
 	
-	public static void storeFile(File fileToStore) 
+	public void storeFile(File fileToStore)
 			throws Exception {
 		
 		// Store file in all data stores
-		for(int i=0; i<3; i++) {
-			if(Constants.DEPLOY_ON_FILE_SYSTEM) {
+		if(Constants.DEPLOY_ON_FILE_SYSTEM) {
+			for (int i = 0; i < 3; i++)
 				fsStore[i].store(fileToStore);
+			return;
+		}
+
+		Semaphore semaphore = new Semaphore(3);
+		ThreadUtils.startThreadWithName(new FilePoster(new GCStore(), fileToStore, semaphore), "GCStore");
+		ThreadUtils.startThreadWithName(new FilePoster(new S3Store(), fileToStore, semaphore), "S3Store");
+		ThreadUtils.startThreadWithName(new FilePoster(new AzureStore(), fileToStore, semaphore), "AzureStore");
+
+		// Wait till all threads return.
+		while(semaphore.availablePermits() != 3)
+			ThreadUtils.sleepQuietly(Constants.EXPECTED_WRITE_LATENCY);
+
+		LogUtils.debug(LOG_TAG, "Write to all three providers successful.");
+	}
+
+	/**
+	 * Retrieves file from a provider at random.
+	 * @param accessKey
+	 * @return File corresponding to access key.
+	 * @throws Exception
+     */
+	public File retrieveFile(String accessKey)
+			throws Exception {
+
+		if(Constants.DEPLOY_ON_FILE_SYSTEM)
+			return new File(fsStore[new Random().nextInt() % 3].retrieve(accessKey));
+
+		// Fault tolerant read from cloud.
+		int i = Constants.READ_ATTEMPTS;
+		while(i > 0) {
+			Callable callable = () -> {
+                Store store = cloudStore[Math.abs(new Random().nextInt() % 3)];
+
+                if(Constants.TEST_GCS_ONLY)
+                    store = cloudStore[0];
+
+				LogUtils.debug(LOG_TAG + " " + "retrieveFile ", "Retrieving file from " + store.getClass());
+				try {
+					String absPath = store.retrieve(accessKey);
+					File file = new File(absPath);
+					return file;
+				} catch (Exception e) {
+					return null;
+				}
+			};
+			File file;
+			file = (File) Executors.newSingleThreadExecutor().submit(callable).get(Constants
+					.MAX_READ_WAIT_TIME_IN_SECONDS, TimeUnit.SECONDS);
+
+			if (file != null)
+				return file;
+			i--;
+		}
+		throw new FileNotFoundException();
+	}
+
+	private class FileRetriever implements Runnable {
+
+		Store provider;
+		String fileName;
+		ConcurrentMap<String, File> map;
+
+		FileRetriever(Store provider, String fileName, ConcurrentMap<String, File> map){
+			this.provider = provider;
+			this.fileName = fileName;
+			this.map = map;
+		}
+
+		@Override
+		public void run() {
+			try{
+                if(Constants.TEST_GCS_ONLY && (provider.getClass() == AzureStore.class || provider.getClass() == S3Store
+                        .class)){
+                    LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Simulating call to " + provider.getClass());
+                    Thread.sleep(Math.abs(new Random().nextInt() % Constants.MAX_READ_WAIT_TIME_IN_SECONDS));
+                    File file = new File("/Users/aviral/Hogwarts/CS-293B/MCSFS/temp");
+                    file.createNewFile();
+                    Files.write(file.toPath(), Arrays.asList("This_is_a_dummy_file."), Charset.forName("UTF-8"));
+                    map.put(provider.getClass().toString(), file);
+                    return;
+                }
+                map.put(provider.getClass().toString(), new File(provider.retrieve(fileName)));
 			}
-			cloudStore[i].store(fileToStore);
+			catch(Exception e){
+				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving file from " +
+						"the " + "cloud.", e);
+			}
 		}
 	}
-	
-	public static File retrieveFile(String accessKey) 
-			throws Exception {
-		File retrievedFile = null;
-		
-		retrievedFile = new File(fsStore[((int)Math.random()%3)].retrieve(accessKey));
-		
-		return retrievedFile;
+
+	private class FilePoster implements  Runnable {
+
+		Store provider;
+		File file;
+		Semaphore semaphore;
+
+		FilePoster(Store provider, File file, Semaphore semaphore){
+			this.provider = provider;
+			this.file = file;
+			this.semaphore = semaphore;
+		}
+
+		@Override
+		public void run() {
+			try{
+				semaphore.acquire();
+				if( Constants.TEST_GCS_ONLY && (provider.getClass() == AzureStore.class || provider.getClass() ==
+                        S3Store.class)){
+					LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Simulating call to ." + provider.getClass());
+					Thread.sleep(Math.abs(new Random().nextInt() % Constants.MAX_READ_WAIT_TIME_IN_SECONDS));
+					return;
+				}
+				provider.store(file);
+			}
+			catch (Exception e){
+				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while storing file.", e);
+			}
+			finally {
+				semaphore.release();
+				LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Released write semaphore.");
+			}
+		}
 	}
 }
