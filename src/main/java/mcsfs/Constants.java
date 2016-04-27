@@ -40,6 +40,9 @@ public class Constants {
 	public static final String S3_BUCKET_NAME = "mcsfs-files";
 
 	public static final boolean DEPLOY_ON_FILE_SYSTEM = true;
+	
+	// S3 Constants
+	public static final String S3_BUCKET_NAME = "mcsfs-files";
 	public static final int EXPECTED_READ_LATENCY = 10; // In milliseconds.
 	public static final int EXPECTED_WRITE_LATENCY = 10; // In milliseconds.
 	public static final int READ_ATTEMPTS = 3;
