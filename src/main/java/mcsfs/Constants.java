@@ -36,10 +36,7 @@ public class Constants {
 	public static final String NUM_SPLITS_SWITCH = "-n";
 	public static final String FILE_NAME_SWITCH = "-sS";
 
-	// S3 Constants
-	public static final String S3_BUCKET_NAME = "mcsfs-files";
-
-	public static final boolean DEPLOY_ON_FILE_SYSTEM = true;
+	public static final boolean DEPLOY_ON_FILE_SYSTEM = false;
 	
 	// S3 Constants
 	public static final String S3_BUCKET_NAME = "mcsfs-files";
@@ -48,5 +45,5 @@ public class Constants {
 	public static final int READ_ATTEMPTS = 3;
 	public static final int MAX_READ_WAIT_TIME_IN_SECONDS = 10;
 
-	public static final boolean TEST_GCS_ONLY = true;
+	public static final boolean TEST_GCS_ONLY = false;
 }

@@ -27,6 +27,9 @@ WORKDIR /MCSFS
 RUN mvn clean install
 WORKDIR /MCSFS/target
 
+# configure environment
+# TODO
+
 EXPOSE 8080
 
 ENTRYPOINT ["java", "-jar", "/MCSFS/target/MCSFS.jar"]

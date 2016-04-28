@@ -217,7 +217,7 @@ public class StorageManager {
 			throws Exception {
 
 		if(Constants.DEPLOY_ON_FILE_SYSTEM)
-			return new File(fsStore[new Random().nextInt() % 3].retrieve(accessKey));
+			return new File(fsStore[Math.abs(new Random().nextInt() % 3)].retrieve(accessKey));
 
 		// Fault tolerant read from cloud.
 		int i = Constants.READ_ATTEMPTS;
@@ -275,8 +275,12 @@ public class StorageManager {
                 }
                 map.put(provider.getClass().toString(), new File(provider.retrieve(fileName)));
 			}
+			catch(InterruptedException e){
+				LogUtils.error(LOG_TAG + " " + provider.getClass(), "I was interrupted.");
+			}
 			catch(Exception e){
-				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving file from " +
+				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving " +
+						"file from " +
 						"the " + "cloud.", e);
 			}
 		}
