@@ -8,14 +8,16 @@ import java.io.File;
 import java.nio.charset.Charset;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Scanner;
 
 public class StorageManagerTest {
 
     private static final String LOG_TAG = "StorageManagerTest";
 
     public static void main(String[] args) throws Exception {
-        StorageManager storageManager = new StorageManager();
         LogUtils.setLogLevel(3);
+        StorageManager storageManager = new StorageManager();
+
 
         // Create dummy file to store.
         File file = new File("/Users/aviral/Hogwarts/CS-293B/MCSFS/TEST");
@@ -44,6 +46,7 @@ public class StorageManagerTest {
         LogUtils.debug(LOG_TAG, "Call to retrieve complete.");
 
         file.deleteOnExit();
+        return;
     }
 
 }

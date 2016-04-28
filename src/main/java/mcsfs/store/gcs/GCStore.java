@@ -26,10 +26,8 @@ public class GCStore implements Store{
     @Override
     public String retrieve(String str) throws IOException, GeneralSecurityException {
         File localCopy = new File(GCSConstants.GCS_DIRECTORY + "/" + str);
-        if(!localCopy.exists()){
-            localCopy.getParentFile().mkdirs();
-            localCopy.createNewFile();
-        }
+        localCopy.getParentFile().mkdirs();
+        localCopy.createNewFile();
 
         Storage client = StorageFactory.getService();
         Storage.Objects.Get bucketRequest = client.objects().get(GCSConstants.GCS_BUCKET_NAME, toGCSFileName(str));

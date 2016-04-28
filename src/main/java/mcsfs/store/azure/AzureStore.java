@@ -46,10 +46,9 @@ public class AzureStore implements Store {
 	public String retrieve(String str) throws IOException,
 			GeneralSecurityException, StorageException, URISyntaxException {
 		File localCopy = new File(AzureConstants.AZURE_DIRECTORY + "/" + str);
-		if (!localCopy.exists()) {
-			localCopy.getParentFile().mkdirs();
-			localCopy.createNewFile();
-		}
+		localCopy.getParentFile().mkdirs();
+		localCopy.createNewFile();
+
 		//System.out.println(localCopy.getAbsolutePath());
 		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
 		if (blobSource.exists()) {

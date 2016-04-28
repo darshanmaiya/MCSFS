@@ -10,3 +10,4 @@ MCSFS.iml
 mcsfs_files/
 mcsfs_working_dir/
 temp
+src/main/java/mcsfs/store/azure/AzureConstants.java

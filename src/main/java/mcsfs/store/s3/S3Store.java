@@ -23,7 +23,9 @@ public class S3Store implements Store {
         // TransferManager processes all transfers asynchronously, 
         // so this call will return immediately.
         File downloadedFile = new File(Constants.MCSFS_WORKING_DIR + Constants.S3_WORKING_DIR + file);
-        Download download = tm.download(bucketName, file, downloadedFile);
+		downloadedFile.getParentFile().mkdirs();
+		downloadedFile.createNewFile();
+		Download download = tm.download(bucketName, file, downloadedFile);
         download.waitForCompletion();
         LogUtils.debug(LOG_TAG, "Successfully downloaded file from bucket.\nName: " + file + "\nBucket name: " +
                 bucketName);
