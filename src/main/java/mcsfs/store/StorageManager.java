@@ -180,7 +180,7 @@ public class StorageManager {
             azureStore.cancel(true);
             s3Store.cancel(true);
 
-			// At least two threads have returned. Populate args as above. TODO correctly.
+			// At least two threads have returned. Populate args as above.
 			int i = 1;
 			for(Map.Entry<String, File> entry : map.entrySet()){
 				if(entry.getKey().equals(GCStore.class.toString()))
