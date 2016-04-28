@@ -26,8 +26,9 @@ import mcsfs.store.Store;
 import mcsfs.utils.LogUtils;
 
 public class FSStore implements Store {
-	
-	private String storeDir = Constants.MCSFS_FILES_DIR + Constants.MCSFS_FILES_STORE_DIR;
+
+	private String storeDir = Constants.MCSFS_FILES_DIR
+			+ Constants.MCSFS_FILES_STORE_DIR;
 	private static final String LOG_TAG = "FSStore";
 
 	public FSStore(int id) {
@@ -42,9 +43,12 @@ public class FSStore implements Store {
 	@Override
 	public void store(File file) throws Exception {
 		File destination = new File(storeDir + file.getName());
-		LogUtils.debug(LOG_TAG, "Creating file at " + destination.getAbsolutePath());
-		destination.getParentFile().mkdirs();
-		destination.createNewFile();
+		if (!destination.exists()) {
+			destination.getParentFile().mkdirs();
+			destination.createNewFile();
+		}
+		LogUtils.debug(LOG_TAG,
+				"Creating file at " + destination.getAbsolutePath());
 		Files.copy(file.toPath(), destination.toPath(), REPLACE_EXISTING);
 	}
 

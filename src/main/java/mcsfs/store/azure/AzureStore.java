@@ -1,13 +1,16 @@
 package mcsfs.store.azure;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import java.security.GeneralSecurityException;
 import java.security.InvalidKeyException;
 
+import mcsfs.Constants;
 import mcsfs.store.Store;
 import mcsfs.utils.LogUtils;
 
@@ -23,15 +26,19 @@ public class AzureStore implements Store {
 
 	private CloudBlobContainer container;
 
+	@SuppressWarnings("resource")
 	public AzureStore() throws InvalidKeyException, URISyntaxException,
-			StorageException {
+			StorageException, IOException {
+		FileReader fileReader = new FileReader("azure.key");
+		BufferedReader bufferedReader = new BufferedReader(fileReader);
+		String accountName = bufferedReader.readLine();
+		String accountKey = bufferedReader.readLine();
 		CloudStorageAccount account = CloudStorageAccount
 				.parse("DefaultEndpointsProtocol=http;" + "AccountName="
-						+ AzureConstants.AZURE_ACCOUNT_NAME + ";"
-						+ "AccountKey=" + AzureConstants.AZURE_ACCOUNT_KEY);
+						+ accountName + ";" + "AccountKey=" + accountKey);
 		CloudBlobClient serviceClient = account.createCloudBlobClient();
 		container = serviceClient
-				.getContainerReference(AzureConstants.AZURE_CONTAINER_NAME);
+				.getContainerReference(Constants.AZURE_CONTAINER_NAME);
 		container.createIfNotExists();
 	}
 
@@ -45,19 +52,19 @@ public class AzureStore implements Store {
 	@Override
 	public String retrieve(String str) throws IOException,
 			GeneralSecurityException, StorageException, URISyntaxException {
-		File localCopy = new File(AzureConstants.AZURE_DIRECTORY + "/" + str);
+		File localCopy = new File(Constants.AZURE_DIRECTORY + "/" + str);
 		if (!localCopy.exists()) {
 			localCopy.getParentFile().mkdirs();
 			localCopy.createNewFile();
 		}
-		//System.out.println(localCopy.getAbsolutePath());
+		// System.out.println(localCopy.getAbsolutePath());
 		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
 		if (blobSource.exists()) {
 			blobSource.download(new FileOutputStream(localCopy));
 		}
 		LogUtils.debug(LOG_TAG, "File " + str + " was downloaded to "
-				+ AzureConstants.AZURE_DIRECTORY + " .");
-		return AzureConstants.AZURE_DIRECTORY + "/" + str;
+				+ Constants.AZURE_DIRECTORY + " .");
+		return Constants.AZURE_DIRECTORY + "/" + str;
 	}
 
 	/**
