@@ -25,8 +25,8 @@ public class Constants {
 	public static final int BUFFER_SIZE = 4096;
 	
 	public static final String DELIMITER_IN_FILENAME = "___";
-	public static final String MCSFS_WORKING_DIR = "/Users/aviral/Hogwarts/CS-293B/MCSFS/mcsfs_working_dir/";
-	public static final String MCSFS_FILES_DIR = "/Users/aviral/Hogwarts/CS-293B/MCSFS/mcsfs_files/";
+	public static final String MCSFS_WORKING_DIR = "mcsfs_working_dir/";
+	public static final String MCSFS_FILES_DIR = "mcsfs_files/";
 	public static final String MCSFS_FILES_STORE_DIR = "store{0}/"; // {0} is replaced with ID
 	
 	// Options for Secretshare library

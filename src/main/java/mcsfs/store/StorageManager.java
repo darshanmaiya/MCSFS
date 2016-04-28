@@ -17,9 +17,7 @@
 package mcsfs.store;
 
 import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.PrintWriter;
 import java.lang.reflect.Field;
 import java.math.BigInteger;
 import java.nio.charset.Charset;
@@ -28,7 +26,6 @@ import java.util.*;
 import java.util.concurrent.*;
 
 import com.amazonaws.AmazonClientException;
-import com.amazonaws.http.timers.client.SdkInterruptedException;
 import com.tiemens.secretshare.engine.SecretShare;
 import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
 import com.tiemens.secretshare.main.cli.MainCombine.CombineInput;
@@ -38,7 +35,6 @@ import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
 import com.tiemens.secretshare.math.BigIntUtilities;
 
 import mcsfs.Constants;
-import mcsfs.store.azure.AzureConstants;
 import mcsfs.store.azure.AzureStore;
 import mcsfs.store.fs.FSStore;
 import mcsfs.store.gcs.GCSConstants;
@@ -99,7 +95,7 @@ public class StorageManager {
                 keyPart = new File(Constants.MCSFS_FILES_DIR + Constants.S3_WORKING_DIR + accessKey + "_key");
 
             else
-                keyPart = new File(AzureConstants.AZURE_DIRECTORY + accessKey + "_key");
+                keyPart = new File(Constants.AZURE_DIRECTORY + accessKey + "_key");
 
             if(!keyPart.getParentFile().exists())
                 keyPart.getParentFile().mkdirs();
