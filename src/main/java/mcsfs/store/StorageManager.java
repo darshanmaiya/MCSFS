@@ -27,6 +27,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 
+import com.amazonaws.AmazonClientException;
 import com.amazonaws.http.timers.client.SdkInterruptedException;
 import com.tiemens.secretshare.engine.SecretShare;
 import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
@@ -37,8 +38,10 @@ import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
 import com.tiemens.secretshare.math.BigIntUtilities;
 
 import mcsfs.Constants;
+import mcsfs.store.azure.AzureConstants;
 import mcsfs.store.azure.AzureStore;
 import mcsfs.store.fs.FSStore;
+import mcsfs.store.gcs.GCSConstants;
 import mcsfs.store.gcs.GCStore;
 import mcsfs.store.s3.S3Store;
 import mcsfs.utils.LogUtils;
@@ -49,9 +52,18 @@ public class StorageManager {
 	private static final String LOG_TAG = "StorageManager";
 
 	private static Store[] fsStore = {new FSStore(1), new FSStore(2), new FSStore(3)};
-	
-	private static Store[] cloudStore = {new GCStore(), new S3Store(), new S3Store()};
-	
+
+	private static Store[] cloudStore;
+
+    public StorageManager() {
+        try{
+            cloudStore = new Store[]{new GCStore(), new S3Store(), new AzureStore()};
+        }
+        catch(Exception e){
+            LogUtils.error(LOG_TAG, "Could not instantiate Azure Store.", e);
+        }
+    }
+
 	public void storeKey(String accessKey, String keyToStore)
 		throws Exception {
 		// Split the key with (k=2, n=3) using Adi Shamir Secret Sharing Algorithm
@@ -78,21 +90,33 @@ public class StorageManager {
         	int shareIndex = share.getIndex();
         	BigInteger splitShare = share.getShare();
 
-        	File keyPart = new File(Constants.MCSFS_WORKING_DIR + accessKey + "_key");
-            keyPart.getParentFile().mkdirs();
+        	File keyPart;
+            if(shareIndex - 1 == 0)
+                keyPart = new File(GCSConstants.GCS_DIRECTORY + accessKey + "_key"); // GCS_DIRECTORY is an absolute
+            // path.
+
+            else if(shareIndex - 1 == 1)
+                keyPart = new File(Constants.MCSFS_FILES_DIR + Constants.S3_WORKING_DIR + accessKey + "_key");
+
+            else
+                keyPart = new File(AzureConstants.AZURE_DIRECTORY + accessKey + "_key");
+
+            if(!keyPart.getParentFile().exists())
+                keyPart.getParentFile().mkdirs();
+
             keyPart.createNewFile();
-			
-            PrintWriter writer = new PrintWriter(keyPart);
-            writer.println(splitShare);
-            writer.close();
-            
+            Files.write(keyPart.toPath(), Arrays.asList(String.valueOf(splitShare)), Charset.forName("UTF-8"));
+
             // Only write to the file system if testing locally
         	if(Constants.DEPLOY_ON_FILE_SYSTEM) {
-	            fsStore[shareIndex-1].store(keyPart);
+                keyPart.getParentFile().mkdirs();
+                keyPart.createNewFile();
+                fsStore[shareIndex-1].store(keyPart);
 				keyPart.delete();
         	}
 			else{
 				// Write to cloud provider.
+                LogUtils.debug(LOG_TAG, "Storing key " + splitShare + " in " + cloudStore[shareIndex - 1]);
 				ThreadUtils.startThreadWithName(new FilePoster(cloudStore[shareIndex-1], keyPart, semaphore),
 						cloudStore[shareIndex-1].getClass().toString());
 				temp.add(keyPart);
@@ -159,7 +183,13 @@ public class StorageManager {
 			// At least two threads have returned. Populate args as above.
 			int i = 1;
 			for(Map.Entry<String, File> entry : map.entrySet()){
-				args[i * 2] = "-s" + i;
+				if(entry.getKey().equals(GCStore.class.toString()))
+                    args[i * 2] = "-s" + 1;
+                else if(entry.getKey().equals(S3Store.class.toString()))
+                    args[i * 2] = "-s" + 2;
+                else
+                    args[i * 2] = "-s" + 3;
+
                 File temp = entry.getValue();
                 try{
                     args[i * 2 + 1] = new Scanner(temp).nextLine();
@@ -283,13 +313,15 @@ public class StorageManager {
                 }
                 map.put(provider.getClass().toString(), new File(provider.retrieve(fileName)));
 			}
-			catch(InterruptedException e){
-				LogUtils.error(LOG_TAG + " " + provider.getClass(), "I was interrupted.");
-			}
 			catch(Exception e){
-				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving " +
-						"file from " +
-						"the " + "cloud.", e);
+
+                if(e.getClass() == InterruptedException.class || e.getClass() == AmazonClientException.class)
+                    LogUtils.error(LOG_TAG + " " + provider.getClass(), "I was interrupted.");
+
+                else
+                    LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving " +
+						"a file from " + provider.getClass() + ".", e);
+                return;
 			}
 		}
 	}
