@@ -50,7 +50,7 @@ public class AzureStore implements Store {
 			localCopy.getParentFile().mkdirs();
 			localCopy.createNewFile();
 		}
-		System.out.println(localCopy.getAbsolutePath());
+		//System.out.println(localCopy.getAbsolutePath());
 		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
 		if (blobSource.exists()) {
 			blobSource.download(new FileOutputStream(localCopy));

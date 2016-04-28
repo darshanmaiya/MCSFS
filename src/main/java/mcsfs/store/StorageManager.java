@@ -17,6 +17,7 @@
 package mcsfs.store;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.PrintWriter;
 import java.lang.reflect.Field;
@@ -26,6 +27,7 @@ import java.nio.file.Files;
 import java.util.*;
 import java.util.concurrent.*;
 
+import com.amazonaws.http.timers.client.SdkInterruptedException;
 import com.tiemens.secretshare.engine.SecretShare;
 import com.tiemens.secretshare.engine.SecretShare.SplitSecretOutput;
 import com.tiemens.secretshare.main.cli.MainCombine.CombineInput;
@@ -158,7 +160,13 @@ public class StorageManager {
 			int i = 1;
 			for(Map.Entry<String, File> entry : map.entrySet()){
 				args[i * 2] = "-s" + i;
-				args[i * 2 + 1] = new Scanner(entry.getValue()).nextLine();
+                File temp = entry.getValue();
+                try{
+                    args[i * 2 + 1] = new Scanner(temp).nextLine();
+                }catch(NoSuchElementException e){
+                    LogUtils.error(LOG_TAG, "Critical error. The following file was empty: " + temp.getAbsolutePath());
+                    throw e;
+                }
 				i++;
 				if(i == 3) break;
 			}
