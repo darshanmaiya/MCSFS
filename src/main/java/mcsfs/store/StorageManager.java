@@ -193,6 +193,8 @@ public class StorageManager {
                     LogUtils.error(LOG_TAG, "Critical error. The following file was empty: " + temp.getAbsolutePath());
                     throw e;
                 }
+                
+                temp.delete();
 				i++;
 				if(i == 3) break;
 			}
@@ -301,7 +303,7 @@ public class StorageManager {
                         .class)){
                     LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Simulating call to " + provider.getClass());
                     Thread.sleep(Math.abs(new Random().nextInt() % Constants.MAX_READ_WAIT_TIME_IN_SECONDS));
-                    File file = new File("/Users/aviral/Hogwarts/CS-293B/MCSFS/temp");
+                    File file = new File(Constants.MCSFS_WORKING_DIR + "temp");
                     file.createNewFile();
                     Files.write(file.toPath(), Arrays.asList("This_is_a_dummy_file."), Charset.forName("UTF-8"));
                     map.put(provider.getClass().toString(), file);

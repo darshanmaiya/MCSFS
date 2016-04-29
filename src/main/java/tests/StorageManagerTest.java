@@ -1,6 +1,7 @@
 package tests;
 
 
+import mcsfs.Constants;
 import mcsfs.store.StorageManager;
 import mcsfs.utils.LogUtils;
 
@@ -20,7 +21,7 @@ public class StorageManagerTest {
 
 
         // Create dummy file to store.
-        File file = new File("/Users/aviral/Hogwarts/CS-293B/MCSFS/TEST");
+        File file = new File(Constants.MCSFS_WORKING_DIR + "TEST.txt");
         file.createNewFile();
         Files.write(file.toPath(), Arrays.asList("This is a dummy file."), Charset.forName("UTF-8"));
 
