@@ -1,0 +1,58 @@
+# Define service.
+apiVersion: v1
+kind: Service
+metadata:
+  name: mcsfs
+  labels:
+    app: mcsfs 
+    role: master
+    tier: frontend
+spec:
+  type: LoadBalancer
+  ports:
+    # the port that this service should serve on
+    - port: 80
+  selector:
+    app: mcsfs
+    role: master
+    tier: frontend
+
+---
+# Define deployment.
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: mcsfs-app 
+  # these labels can be applied automatically 
+  # from the labels in the pod template if not set
+  # labels:
+  #   app: redis
+  #   role: master
+  #   tier: backend
+spec:
+  # this replicas value is default
+  # modify it according to your case
+  replicas: 1
+  # selector can be applied automatically 
+  # from the labels in the pod template if not set
+  # selector:
+  #   matchLabels:
+  #     app: guestbook
+  #     role: master
+  #     tier: backend
+  template:
+    metadata:
+      labels:
+        app: mcsfs
+        role: master
+        tier: frontend
+    spec:
+      containers:
+      - name: mcsfs
+        image: nginx  # TODO Add image here.
+        resources:
+          requests:
+            cpu: 100m
+            memory: 100Mi
+        ports:
+        - containerPort: 80
