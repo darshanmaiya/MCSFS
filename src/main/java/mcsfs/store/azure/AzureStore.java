@@ -29,7 +29,7 @@ public class AzureStore implements Store {
 	@SuppressWarnings("resource")
 	public AzureStore() throws InvalidKeyException, URISyntaxException,
 			StorageException, IOException {
-		FileReader fileReader = new FileReader("azure.key");
+		FileReader fileReader = new FileReader("/azure.key");
 		BufferedReader bufferedReader = new BufferedReader(fileReader);
 		String accountName = bufferedReader.readLine();
 		String accountKey = bufferedReader.readLine();

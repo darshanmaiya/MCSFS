@@ -55,23 +55,43 @@ function mcsfs-gce-deploy(){
 			mcsfs-gce-tear-down
 		        return	
 		fi
-		kubectl cluster-info > /dev/null 2>&1
-		if [[ ! $? == '0' ]]
-		then
-			echo "ERROR could not configure kubectl"
-		else
-			# Create deployment and service.
-			kubectl create -f mcsfs-definition.yaml
-			echo
-			echo "Service: "
-			echo
-			kubectl get services
-			echo
-			echo "Deployment: "
-			echo
-			kubectl get deployments
-		fi
+		provision_cluster
 	else
 		echo "kubectl not found."
+	fi
+}
+
+function mcsfs-aws-tear-down(){
+	export KUBERNETES_PROVIDER=aws
+	cluster/kube-down.sh
+}
+
+function mcsfs-aws-deploy(){
+	export KUBERNETES_PROVIDER=aws
+	echo "Creating cluster..."
+	curl -sS https://get.k8s.io | bash
+	echo
+	provision_cluster
+}
+
+provision_cluster(){
+	echo
+	echo "Cluster info"
+	kubectl cluster-info
+	echo
+	if [[ ! $? == '0' ]]
+	then
+		echo "ERROR could not configure kubectl"
+	else
+		# Create deployment and service.
+		kubectl create -f mcsfs-definition.yaml
+		echo
+		echo "Service: "
+		echo
+		kubectl get services
+		echo
+		echo "Deployment: "
+		echo
+		kubectl get deployments
 	fi
 }

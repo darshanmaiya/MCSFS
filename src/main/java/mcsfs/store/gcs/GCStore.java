@@ -138,15 +138,18 @@ public class GCStore implements Store{
      * @param path the path to the object to delete.
      * @param bucketName the bucket the object is contained in.
      */
-    private static void deleteObject(String path, String bucketName)
+    private void deleteObject(String path, String bucketName)
             throws IOException, GeneralSecurityException {
         Storage client = StorageFactory.getService();
         client.objects().delete(bucketName, path).execute();
     }
 
 	@Override
-	public void remove(String accessKey) {
+	public void remove(String accessKey) throws Exception{
 		// TODO Auto-generated method stub
-		
-	}
+        LogUtils.debug(LOG_TAG, "Deleting file. Name: " + accessKey);
+        deleteObject(accessKey, GCSConstants.GCS_BUCKET_NAME);
+        LogUtils.debug(LOG_TAG, "Deleting key. Name: " + accessKey + "_key");
+        deleteObject(accessKey + "_key", GCSConstants.GCS_BUCKET_NAME);
+    }
 }
