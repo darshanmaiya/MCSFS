@@ -1,0 +1,17 @@
+------WebKitFormBoundaryn5VNBOPThRcLqBkl
+Content-Disposition: form-data; name="up-passphrase"
+
+test
+------WebKitFormBoundaryn5VNBOPThRcLqBkl
+Content-Disposition: form-data; name="file-input"; filename="manager.conf"
+Content-Type: application/octet-stream
+
+{port, 5000}.
+{engine_id, "mgrEngine"}.
+{max_message_size, 484}.
+
+------WebKitFormBoundaryn5VNBOPThRcLqBkl
+Content-Disposition: form-data; name="file-size"
+
+65
+------WebKitFormBoundaryn5VNBOPThRcLqBkl--
