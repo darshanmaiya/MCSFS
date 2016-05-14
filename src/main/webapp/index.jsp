@@ -71,11 +71,6 @@
 							<label class="control-label">Select File *</label>
 							<input id="file-input" name="file-input" required type="file" class="file" />
 					    </form>
-					    <!-- <br />
-					    <span>
-					        <strong>Note: </strong>
-					        Existing files can be replaced by providing the previous file name, passphrase and admin key
-					    </span> -->
 				    </div>
 					<div role="tabpanel" class="tab-pane" id="download">
 					    <form id="frm-file-download" action="/mcsfs" method="GET">
@@ -110,6 +105,7 @@
 
     <script src="https://code.jquery.com/jquery-2.2.3.min.js"></script>
     <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.6/js/bootstrap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/spin.js/2.3.2/spin.min.js" type="text/javascript"></script>
     <script src="scripts/fileinput.min.js" type="text/javascript"></script>
     <script src="scripts/alertUtil.js"></script>
     <script src="scripts/index.js"></script>

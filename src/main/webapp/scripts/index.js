@@ -31,6 +31,35 @@
 		var data = new FormData($('#frm-file-upload')[0]);
 		data.append("file-size", $('#file-input')[0].files[0].size);
 		
+		$("#frm-file-upload").find("input, button").prop('disabled', true);
+		
+		alertUtil.warning("Uploading file...")
+		$(".alert-warning").append("<span id='spinner'></span>");
+		var target = document.getElementById('spinner');
+		var opts = {
+				  lines: 9 // The number of lines to draw
+				, length: 6 // The length of each line
+				, width: 2 // The line thickness
+				, radius: 2 // The radius of the inner circle
+				, scale: 1 // Scales overall size of the spinner
+				, corners: 1 // Corner roundness (0..1)
+				, color: '#000' // #rgb or #rrggbb or array of colors
+				, opacity: 0.25 // Opacity of the lines
+				, rotate: 0 // The rotation offset
+				, direction: 1 // 1: clockwise, -1: counterclockwise
+				, speed: 1 // Rounds per second
+				, trail: 60 // Afterglow percentage
+				, fps: 20 // Frames per second when using setTimeout() as a fallback for CSS
+				, zIndex: 2e9 // The z-index (defaults to 2000000000)
+				, className: 'spinner' // The CSS class to assign to the spinner
+				, top: '-15px' // Top position relative to parent
+				, left: '50%' // Left position relative to parent
+				, shadow: false // Whether to render a shadow
+				, hwaccel: false // Whether to use hardware acceleration
+				, position: 'relative' // Element positioning
+				};
+		var spinner = new Spinner(opts).spin(target);
+		
 		$.ajax({
 		    url: '/mcsfs',
 		    data: data,
@@ -43,8 +72,17 @@
 		    		alertUtil.success("File uploaded successfully. Your access key is: " + $.parseJSON(data).accessKey);
 		    		$("#frm-file-upload").trigger('reset');
 		    	}
-		    	else
+		    	else {
 		    		alertUtil.danger("File upload failed. Please try again...");
+		    	}
+
+	    		$("#frm-file-upload").find("input, button").prop('disabled', false);
+		    	spinner.stop();
+		    },
+		    error: function (data) {
+		    	alertUtil.danger("File upload failed. Please try again...");
+	    		$("#frm-file-upload").find("input, button").prop('disabled', false);
+	    		spinner.stop();
 		    }
 		});
 		
