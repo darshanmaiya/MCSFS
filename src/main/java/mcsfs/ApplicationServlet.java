@@ -169,7 +169,6 @@ public class ApplicationServlet extends HttpServlet {
 	        // Delete uploaded file
 	        inputFile.delete();
 	        
-	        // TODO: Use separate threads for operations below
 	        storageManager.storeKey(accessKeyStr, fileName);
 	        storageManager.storeFile(encFile);
 	        
@@ -201,18 +200,30 @@ public class ApplicationServlet extends HttpServlet {
 	protected void doDelete(HttpServletRequest request, HttpServletResponse response) 
 			throws ServletException, IOException {
 		
-		throw new ServletException("Unimplemented method: ApplicationServlet#doDelete");
-		/*String passphrase = request.getParameter("del-passphrase");
-		String adminkey = request.getParameter("del-adminkey");
-		System.out.println(passphrase);
-		System.out.println(adminkey);
-		File file = new File(passphrase);
-    	
-		if(file.delete()) {
-			System.out.println(file.getName() + " is deleted!");
-		} else {
-			System.out.println("Delete operation failed.");
-		}*/
+		String delPassphrase = request.getParameter("del-passphrase");
+		String delAccessKey = request.getParameter("del-access-key");
+		OutputStream out = null;
+		
+		try {
+			String fileName = storageManager.retrieveKey(delAccessKey);
+			
+	        String passphrase = fileName.substring(fileName.lastIndexOf(Constants.DELIMITER_IN_FILENAME) + 3);
+			
+	        if(!passphrase.equals(delPassphrase)) {
+	        	throw new Exception("Incorrect passphrase provided.");
+	        }
+	        
+	        storageManager.remove(delAccessKey);
+		} catch (Exception e) {
+			e.printStackTrace();
+			
+			response.getWriter().print("No such file found or incorrect access key.");
+		} finally {
+			if(out != null) {
+				out.flush();
+				out.close();
+			}
+		}
 	}
 
 	private String getFileName(final Part part) {

@@ -102,10 +102,9 @@
 		console.debug("delete");
 		
 		$.ajax({
-		    url: '/mcsfs',
-		    data: $("#frm-file-delete").serialize(),
+		    url: '/mcsfs' + '?' + $.param({"del-passphrase": $("#del-passphrase").val(), "del-access-key": $("#del-access-key").val()}),
 		    cache: false,
-		    type: 'GET',
+		    type: 'DELETE',
 		    success: function(data) {
 		    	if(data === "success") {
 		    		alertUtil.success("File deleted successfully");

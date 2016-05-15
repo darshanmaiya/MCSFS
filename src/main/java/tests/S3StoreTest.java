@@ -35,6 +35,10 @@ public class S3StoreTest {
         LogUtils.debug(LOG_TAG, "Attempting to download file from bucket " + Constants.S3_BUCKET_NAME);
         s3Store.retrieve(fileName);
         LogUtils.debug(LOG_TAG, "Download complete.");
+        
+        LogUtils.debug(LOG_TAG, "Attempting to delete file from bucket " + Constants.S3_BUCKET_NAME);
+        s3Store.remove(fileName);
+        LogUtils.debug(LOG_TAG, "Delete complete.");
 	}
 
 }

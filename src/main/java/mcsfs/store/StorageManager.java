@@ -215,10 +215,18 @@ public class StorageManager {
 		return retrievedKey;
 	}
 	
-	public static void remove(String accessKey) 
+	public void remove(String accessKey) 
 			throws Exception {
-		// Remove the file with name accessKey from all data stores
-		
+		Semaphore semaphore = new Semaphore(3);
+		ThreadUtils.startThreadWithName(new FileRemover(new GCStore(), accessKey, semaphore), "GCStore");
+		ThreadUtils.startThreadWithName(new FileRemover(new S3Store(), accessKey, semaphore), "S3Store");
+		ThreadUtils.startThreadWithName(new FileRemover(new AzureStore(), accessKey, semaphore), "AzureStore");
+
+		// Wait till all threads return.
+		while(semaphore.availablePermits() != 3)
+			ThreadUtils.sleepQuietly(Constants.EXPECTED_WRITE_LATENCY);
+
+		LogUtils.debug(LOG_TAG, "Remove from all three providers successful.");
 	}
 	
 	public void storeFile(File fileToStore)
@@ -354,6 +362,34 @@ public class StorageManager {
 			finally {
 				semaphore.release();
 				LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Released write semaphore.");
+			}
+		}
+	}
+	
+	private class FileRemover implements  Runnable {
+
+		Store provider;
+		String accessKey;
+		Semaphore semaphore;
+
+		FileRemover(Store provider, String accessKey, Semaphore semaphore){
+			this.provider = provider;
+			this.accessKey = accessKey;
+			this.semaphore = semaphore;
+		}
+
+		@Override
+		public void run() {
+			try{
+				semaphore.acquire();
+				provider.remove(accessKey);
+			}
+			catch (Exception e){
+				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while removing file.", e);
+			}
+			finally {
+				semaphore.release();
+				LogUtils.debug(LOG_TAG + " " + provider.getClass(), "Released remove semaphore.");
 			}
 		}
 	}

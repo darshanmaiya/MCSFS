@@ -1,8 +1,15 @@
 package mcsfs.store.s3;
 
 import java.io.File;
+import java.util.*;
 
 import com.amazonaws.auth.DefaultAWSCredentialsProviderChain;
+import com.amazonaws.services.s3.AmazonS3;
+import com.amazonaws.services.s3.AmazonS3Client;
+import com.amazonaws.services.s3.model.DeleteObjectRequest;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest;
+import com.amazonaws.services.s3.model.DeleteObjectsRequest.KeyVersion;
+import com.amazonaws.services.s3.model.DeleteObjectsResult;
 import com.amazonaws.services.s3.transfer.Download;
 import com.amazonaws.services.s3.transfer.TransferManager;
 import com.amazonaws.services.s3.transfer.Upload;
@@ -49,8 +56,19 @@ public class S3Store implements Store {
 
 	@Override
 	public void remove(String accessKey) throws Exception {
-		// TODO Auto-generated method stub
+		LogUtils.debug(LOG_TAG, "Deleting file with access key: " + accessKey);
+		AmazonS3 s3Client = new AmazonS3Client(new DefaultAWSCredentialsProviderChain());
+		DeleteObjectsRequest multiObjectDeleteRequest = new DeleteObjectsRequest(bucketName);
+		
+		List<KeyVersion> keys = new ArrayList<KeyVersion>();
+		keys.add(new KeyVersion(accessKey));
+		keys.add(new KeyVersion(accessKey + "_key"));
+		        
+		multiObjectDeleteRequest.setKeys(keys);
 
+		s3Client.deleteObjects(multiObjectDeleteRequest);
+
+		LogUtils.debug(LOG_TAG, "Deleted file with access key: " + accessKey);
 	}
 
 }
