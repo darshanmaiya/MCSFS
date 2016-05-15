@@ -82,12 +82,15 @@ public class AzureStore implements Store {
 	}
 
 	/**
-	 * Delete a file on Azure storeage.
+	 * Delete a file on Azure storage.
 	 */
 	@Override
 	public void remove(String str) throws Exception {
 		CloudBlockBlob blobSource = container.getBlockBlobReference(str);
 		blobSource.deleteIfExists();
+		
+		CloudBlockBlob blobSourceKey = container.getBlockBlobReference(str + "_key");
+		blobSourceKey.deleteIfExists();
 	}
 
 }
