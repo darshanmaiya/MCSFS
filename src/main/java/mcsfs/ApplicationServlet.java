@@ -214,6 +214,7 @@ public class ApplicationServlet extends HttpServlet {
 	        }
 	        
 	        storageManager.remove(delAccessKey);
+	        response.getWriter().print("{\"result\": \"success\"}");
 		} catch (Exception e) {
 			e.printStackTrace();
 			

@@ -106,7 +106,7 @@
 		    cache: false,
 		    type: 'DELETE',
 		    success: function(data) {
-		    	if(data === "success") {
+		    	if($.parseJSON(data).result === "success") {
 		    		alertUtil.success("File deleted successfully");
 		    		$("#frm-file-delete").trigger('reset');
 		    	}
