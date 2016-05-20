@@ -11,7 +11,8 @@ spec:
   type: LoadBalancer
   ports:
     # the port that this service should serve on
-    - port: 80
+  - port: 80
+    targetPort: 8080
   selector:
     app: mcsfs
     role: master
@@ -49,10 +50,10 @@ spec:
     spec:
       containers:
       - name: mcsfs
-        image: nginx  # TODO Add image here.
+        image: aviralcse/uber293b 
         resources:
           requests:
             cpu: 100m
             memory: 100Mi
         ports:
-        - containerPort: 80
+        - containerPort: 8080
