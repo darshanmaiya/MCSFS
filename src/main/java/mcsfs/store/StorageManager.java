@@ -327,9 +327,11 @@ public class StorageManager {
                 if(e.getClass() == InterruptedException.class || e.getClass() == AmazonClientException.class)
                     LogUtils.error(LOG_TAG + " " + provider.getClass(), "I was interrupted.");
 
-                else
+                else {
                     LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while retrieving " +
 						"a file from " + provider.getClass() + ".", e);
+                    map.put(provider.getClass().toString(), new File(fileName));
+                }
                 return;
 			}
 		}

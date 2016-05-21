@@ -220,7 +220,7 @@ public class ApplicationServlet extends HttpServlet {
 		} catch (Exception e) {
 			e.printStackTrace();
 			
-			response.getWriter().print("No such file found or incorrect access key.");
+			response.getWriter().print("{\"result\": \"failure\", \"description\": \"No such file found or incorrect access key.\"}");
 		} finally {
 			if(out != null) {
 				out.flush();
