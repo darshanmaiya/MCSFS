@@ -25,7 +25,7 @@ public class GCStore implements Store{
      */
     @Override
     public String retrieve(String str) throws IOException, GeneralSecurityException {
-        File localCopy = new File(GCSConstants.GCS_DIRECTORY + "/" + str);
+        File localCopy = new File(GCSConstants.GCS_DIRECTORY + "/" + str +  + System.currentTimeMillis());
         localCopy.getParentFile().mkdirs();
         localCopy.createNewFile();
 

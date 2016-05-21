@@ -29,7 +29,7 @@ public class S3Store implements Store {
         TransferManager tm = new TransferManager(new DefaultAWSCredentialsProviderChain());
         // TransferManager processes all transfers asynchronously, 
         // so this call will return immediately.
-        File downloadedFile = new File(Constants.MCSFS_WORKING_DIR + Constants.S3_WORKING_DIR + file);
+        File downloadedFile = new File(Constants.MCSFS_WORKING_DIR + Constants.S3_WORKING_DIR + file + System.currentTimeMillis());
 		downloadedFile.getParentFile().mkdirs();
 		downloadedFile.createNewFile();
 		Download download = tm.download(bucketName, file, downloadedFile);

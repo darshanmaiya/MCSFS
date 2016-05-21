@@ -52,7 +52,8 @@ public class AzureStore implements Store {
 	@Override
 	public String retrieve(String str) throws IOException,
 			GeneralSecurityException, StorageException, URISyntaxException {
-		File localCopy = new File(Constants.AZURE_DIRECTORY + "/" + str);
+		String localFileName = Constants.AZURE_DIRECTORY + "/" + str + System.currentTimeMillis();
+		File localCopy = new File(localFileName);
 		if (!localCopy.exists()) {
 			localCopy.getParentFile().mkdirs();
 			localCopy.createNewFile();
@@ -64,7 +65,7 @@ public class AzureStore implements Store {
 		}
 		LogUtils.debug(LOG_TAG, "File " + str + " was downloaded to "
 				+ Constants.AZURE_DIRECTORY + " .");
-		return Constants.AZURE_DIRECTORY + "/" + str;
+		return localFileName;
 	}
 
 	/**
