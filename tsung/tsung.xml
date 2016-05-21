@@ -8,15 +8,17 @@
   </clients>
 
   <!-- Server side setup -->
-<servers>
-  <server host="127.0.0.1" port="8080" type="tcp"></server>
-</servers>
+  <servers>
+    <server host="mcsfs.xyz" port="80" type="tcp"></server>
+  </servers>
 
   <!-- to start os monitoring (cpu, network, memory). Use an erlang
   agent on the remote machine or SNMP. erlang is the default -->
+  <!--
   <monitoring>
     <monitor host="127.0.0.1" type="snmp"></monitor>
   </monitoring>
+  -->
 
   <load>
   <!-- several arrival phases can be set: for each phase, you can set
