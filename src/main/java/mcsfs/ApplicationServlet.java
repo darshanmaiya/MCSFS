@@ -27,6 +27,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.Part;
 
+import mcsfs.queue.JobQueue;
 import mcsfs.store.StorageManager;
 import mcsfs.utils.ConversionUtils;
 import mcsfs.utils.CryptUtils;
@@ -54,6 +55,7 @@ public class ApplicationServlet extends HttpServlet {
 	public void init() throws ServletException {
 		LogUtils.setLogLevel(3);
 		storageManager = new StorageManager();
+		JobQueue.startQueueProcessing();
 	}
 
 	/**

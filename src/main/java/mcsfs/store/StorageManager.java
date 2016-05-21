@@ -35,6 +35,9 @@ import com.tiemens.secretshare.main.cli.MainSplit.SplitOutput;
 import com.tiemens.secretshare.math.BigIntUtilities;
 
 import mcsfs.Constants;
+import mcsfs.queue.Job;
+import mcsfs.queue.JobQueue;
+import mcsfs.queue.QueueOperations;
 import mcsfs.store.azure.AzureStore;
 import mcsfs.store.fs.FSStore;
 import mcsfs.store.gcs.GCSConstants;
@@ -358,6 +361,7 @@ public class StorageManager {
 			}
 			catch (Exception e){
 				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while storing file.", e);
+				JobQueue.addJob(new Job(QueueOperations.REMOVE, this.file, null, provider.getClass().toString(), 0));
 			}
 			finally {
 				semaphore.release();
@@ -386,6 +390,7 @@ public class StorageManager {
 			}
 			catch (Exception e){
 				LogUtils.error(LOG_TAG + " " + provider.getClass(), "Something went wrong while removing file.", e);
+				JobQueue.addJob(new Job(QueueOperations.REMOVE, null, this.accessKey, provider.getClass().toString(), 0));
 			}
 			finally {
 				semaphore.release();
