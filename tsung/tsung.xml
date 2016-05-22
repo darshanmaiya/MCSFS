@@ -25,13 +25,13 @@
   the mean inter-arrival time between new clients and the phase
   duration -->
    <arrivalphase phase="1" duration="60" unit="second">
-     <users interarrival="2" unit="second"></users>
+     <users interarrival="1" unit="second"></users>
    </arrivalphase>
    <arrivalphase phase="2" duration="60" unit="second">
-     <users interarrival="4" unit="second"></users>
+     <users interarrival="0.5" unit="second"></users>
    </arrivalphase>
    <arrivalphase phase="3" duration="60" unit="second">
-     <users interarrival="8" unit="second"></users>
+     <users interarrival="0.25" unit="second"></users>
    </arrivalphase>
   </load>
 
@@ -52,30 +52,60 @@
     <thinktime value="1" random="true"></thinktime>
     <request> <http url='/mcsfs' version='1.1'  contents_from_file='65b.bin' content_type='multipart/form-data; boundary=----WebKitFormBoundaryn5VNBOPThRcLqBkl' method='POST'></http></request>
   </session>
-  <session name="upload-2m" probability="15" type="ts_http">
+  <session name="upload-2m" probability="5" type="ts_http">
     <request> <http url="/" method="GET" version="1.1"></http> </request>
     <thinktime value="1" random="true"></thinktime>
     <request><http url='/mcsfs' version='1.1'  contents_from_file='2m.bin' content_type='multipart/form-data; boundary=----WebKitFormBoundaryQLjVtwipDJo3FHok' method='POST'></http></request>
   </session>
-  <session name="upload-640k" probability="25" type="ts_http">
+  <session name="upload-640k" probability="10" type="ts_http">
     <request> <http url="/" method="GET" version="1.1"></http> </request>
     <thinktime value="1" random="true"></thinktime>
     <request> <http url='/mcsfs' version='1.1'  contents_from_file='640k.bin' content_type='multipart/form-data; boundary=----WebKitFormBoundaryQLjVtwipDJo3FHok' method='POST'></http></request>
   </session>
-  <session name="retrive-65b" probability="10" type="ts_http">
+  <session name="retrive-65b-1" probability="10" type="ts_http">
     <request> <http url="/" method="GET" version="1.1"></http> </request>
     <thinktime value="1" random="true"></thinktime>
     <request> <http url='/mcsfs?down-access-key=212167199050003241179169245043J188048234188054' version='1.1' method='GET'></http> </request>
   </session>
-  <session name="retrive-2m" probability="15" type="ts_http">
+  <session name="retrive-65b-2" probability="10" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=193050qx049eH047TJbQ164064064213' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-65b-3" probability="5" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=253cS063207e063026196040036225016002209164' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-2m-1" probability="10" type="ts_http">
     <request> <http url="/" method="GET" version="1.1"></http> </request>
     <thinktime value="1" random="true"></thinktime>
     <request> <http url='/mcsfs?down-access-key=217Y142127180167177W153144222173007244008064' version='1.1' method='GET'></http> </request>
   </session>
-  <session name="retrive-640k" probability="25" type="ts_http">
+  <session name="retrive-2m-2" probability="10" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=140234160095176T027128EX183157j127124186' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-2m-3" probability="5" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=236m175151171060035q058250l037168153xB' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-640k-1" probability="10" type="ts_http">
     <request> <http url="/" method="GET" version="1.1"></http> </request>
     <thinktime value="1" random="true"></thinktime>
     <request> <http url='/mcsfs?down-access-key=235029033137L215059142022172220G025169019N' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-640k-2" probability="10" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=D227213174009176052187139234134234198226231048' version='1.1' method='GET'></http> </request>
+  </session>
+  <session name="retrive-640k-3" probability="5" type="ts_http">
+    <request> <http url="/" method="GET" version="1.1"></http> </request>
+    <thinktime value="1" random="true"></thinktime>
+    <request> <http url='/mcsfs?down-access-key=171q038135135221217135242227h201243216181d' version='1.1' method='GET'></http> </request>
   </session>
  </sessions>
 </tsung>
