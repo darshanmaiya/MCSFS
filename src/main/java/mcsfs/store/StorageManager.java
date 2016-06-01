@@ -69,7 +69,8 @@ public class StorageManager {
         String[] args = new String[] {
         		Constants.QUORUM_SWITCH, Constants.QUORUM_VALUE,
         		Constants.NUM_SPLITS_SWITCH, Constants.NUMBER_OF_SPLITS,
-        		Constants.FILE_NAME_SWITCH, keyToStore
+        		Constants.FILE_NAME_SWITCH, keyToStore,
+        		"-prime4096"
         	};
         
         SplitInput input = SplitInput.parse(args);
@@ -139,6 +140,7 @@ public class StorageManager {
 		
 		// Retrieve QUORUM number of parts of the split key and extract the key back
 		String[] args = new String[]{
+        		"-prime4096",
         		Constants.QUORUM_SWITCH, Constants.QUORUM_VALUE,
         		"", "",
         		"", ""
@@ -183,15 +185,15 @@ public class StorageManager {
 			int i = 1;
 			for(Map.Entry<String, File> entry : map.entrySet()){
 				if(entry.getKey().equals(GCStore.class.toString()))
-                    args[i * 2] = "-s" + 1;
+                    args[i * 2 + 1] = "-s" + 1;
                 else if(entry.getKey().equals(S3Store.class.toString()))
-                    args[i * 2] = "-s" + 2;
+                    args[i * 2 + 1] = "-s" + 2;
                 else
-                    args[i * 2] = "-s" + 3;
+                    args[i * 2 + 1] = "-s" + 3;
 
                 File temp = entry.getValue();
                 try{
-                    args[i * 2 + 1] = new Scanner(temp).nextLine();
+                    args[i * 2 + 2] = new Scanner(temp).nextLine();
                 }catch(NoSuchElementException e){
                     LogUtils.error(LOG_TAG, "Critical error. The following file was empty: " + temp.getAbsolutePath());
                     throw e;
