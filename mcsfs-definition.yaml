@@ -1,41 +1,3 @@
-# Define secrets.
-kind: Secret
-apiVersion: v1
-metadata:
-	name: azure-secret
-data: 
-	azure.key: mcsfs
-	   OYSevnjZIwjXo8b/DpZvIIlCmCg6l6mLooKAkdZ0lg+Z8GMm094HGBFc1s1lFmaitGDtqeCdlMSjZ3/yEy/duA==
-
-kind: Secret
-apiVersion: v1
-metadata:
-	name: gce-secret
-data:
-	MCSFS-87f701700f52.json:
-		{
-	           "type": "service_account",
-		   "project_id": "uber-293b",
-		   "private_key_id": "2cbb4319a6f40cf3542f17d71a818460930c4424",
-		   "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvgIBADANBgkqhkiG9w0BAQEFAASCBKgwggSkAgEAAoIBAQCUEsiOKkvAwg0y\nK7+VQn0NP9Ph/jOAsug7nA2XLMLBtw1HSvTzdqAV+FvYZWEafA6YgLEYX5riJR5R\nez/btC2yhtcS0su2eyIspbvDlJXhnr9QkBsVyjdGG1j1iOrYQjxP8tp4TgMLttTs\n5hAFHybHMCBj8e1PcsJlBjcQCqdHBPJ0NcATtSg1rmqg+HFx+MPXC6TiRhxhfAc2\n4mgtWuslf2KJi0wwEhSBjlI/3eoJQeDxMq9kofMQX7w06aFy00zbDVXw+9zQxegR\nDraSqNcKv952zwK/M1d67cc5AtyYHaQCUfKe/YVvcRygG5rpj7OFt37QTQgW+d04\n0vxR9nHvAgMBAAECggEAbw7PgWFTw9VHlHOfk9F0fXV786p28nY9HEhlIRefUy96\nNBiSM/CrDQ9jw5/1/qlBQTx0lzVNs4Png3GPabdv9tCPizyzMcCU1yvO8lgFOl2Y\nXFJZHjS21Ew6op34lg7HsacSGN1aB3Uvqia7qTu+F/OOt6eCN+54wtCwh8WVxPta\nQIp0mLzEPeGdQcsNB0lRNFy58kTYPbpCOzvbo3O00xsafgRRBRNeVG74VujvLU6o\nLzc9Jd4drlXYnMaabmbAlCydfd+HfjNrMyJ68lIllVaJRlxSydGlqelh2yHy3flJ\nbwXkWMAKkQbfqLTWJXoFEId6NnntTxTEiwNaz+M3sQKBgQDPc+m4QY6If0GFkblI\nuDTQ0A+ExtPwiIi1IA3fLyWjzkBLOTXrVT+XTt9j55QrGLyOfe06h1126Wkb04/o\nay2aC5W597XMDDdnVg49gETl8sVw7CiQFiHHhBZAZsYYtgqXLa1h2w+qRgNOiqPI\niFoWT6WKTnyCeviMo/l+WYvB3QKBgQC2uZEoQDj+Nz5pW/3y+eAnaYiGO7jHw+WK\nSZaNzxP5/E13sytFPpZD84swWm1byTtJO4l5ARUX6hKO017qCHbHU1n6D6R4oSr9\nO6I58frSUPxXXwTFeq7MWXfFdjtRO18/fl5dAPIJXNtZXJPA86PeAf8bts0d7mha\nrQlgXxGUOwKBgQC21DMg/jW9ullmfB1NJ3r0pMlofUp/6/R/nHZdQdHsYXNsWEla\n09CtaweZppiAutZCxlxyfqYyjFbj/ToQ3ZRc9OTJ9rOz1vhlDASU0xzlg2XatWay\nRa8ThSePLoRbduQyhEEPwt41dGqpp6ncq76pdxwvnihBXlr6p/DUF9sByQKBgAd2\nuwQu42UW8pixJkVniY1ylR4OkHSwfs7QRLMUM1exw6RREEJq1Q5/gz79YpwuMxrB\nsNLdhXQNnqZw4d6ja96me/Vn8CrxQmVHq0+8n6c5oaUb/4DliwBT4z2Qn8moqDJa\nwhYAdOKHBXq3+l0WVqo54KbMJ8LCO0cA7HIgUAKDAoGBAJ5WP25tR9YeaYrLahza\n93Y4skdFcunjubl1LMxk1QjmRNnj9UbLseoICpV6WVI3DVDaKaPjr+tBTvrQxrel\nsm8WFcs6So4BymYc9RwGMk0HApLGfbcJDO9RQS3d6a9e5edqErbpMi25Cf67/62m\ngPbfv5s70hwGRAPAxGc56RXU\n-----END PRIVATE KEY-----\n",
-	         "client_email": "gcs-bucket-store@uber-293b.iam.gserviceaccount.com",
-	       	 "client_id": "108279171365209950176",
-  		 "auth_uri": "https://accounts.google.com/o/oauth2/auth",
-  		 "token_uri": "https://accounts.google.com/o/oauth2/token",
-  		 "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
-  		 "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/gcs-bucket-store%40uber-293b.iam.gserviceaccount.com"
-		}
-
-								  
-kind: Secret
-apiVersion: v1
-metadata:
-	name: aws-secret
-data:
-	credentials: [default]
-		aws_access_key_id = AKIAIDUQ3H3JPI3SIT2A
-		aws_secret_access_key = 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
-
 # Define service.
 apiVersion: v1
 kind: Service
@@ -88,30 +50,30 @@ spec:
     spec:
       containers:
       - name: mcsfs
-        image: aviralcse/uber293b 
+      image: aviralcse/uber293b:v1 
         resources:
           requests:
             cpu: 100m
             memory: 100Mi
         ports:
         - containerPort: 8080
-	volumeMounts:
-		-name: gce-secret-volume
-		readOnly: true
-		mountPath: /MCSFS/src/main/java/mcsfs/store/gcs/
-		-name: azure-secret-volume
-		readOnly: true
-		mountPath: /secret/
-      		-name: aws-secret-volume
-		readOnly: true
-		mountPath: /.aws
-      volumes:
-	      -name: gce-secret-volume
-	      secret: 
-	      	secretName: gce-secret
-      	      -name: aws-secret-volume
-	      secret:	
-      		secretName: aws-secret
-	      -name: azure-secret-volume
-	      secret:
-		secretName: azure-secret	      
+        volumeMounts:
+                - name: gce-secret-volume
+                  readOnly: true
+                  mountPath: /MCSFS/src/main/java/mcsfs/store/gcs/
+                - name: azure-secret-volume
+                  readOnly: true
+                  mountPath: /secret/
+                - name: aws-secret-volume
+                  readOnly: true
+                  mountPath: /.aws
+      volumes: 
+              - name: gce-secret-volume
+                secret: 
+                  secretName: gce-key
+              - name: aws-secret-volume
+                secret:
+                  secretName: aws-key
+              - name: azure-secret-volume
+                secret:
+                  secretName: azure-key
