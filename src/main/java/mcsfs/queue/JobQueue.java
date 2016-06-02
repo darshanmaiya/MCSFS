@@ -47,7 +47,7 @@ public class JobQueue {
 				e.printStackTrace();
 				job.setRetries(job.getRetries() + 1);
 
-				if(job.getRetries() < 50)
+				if(job.getRetries() < 60)
 					newJobs.add(job);
 			} finally {
 				jobs = newJobs;
