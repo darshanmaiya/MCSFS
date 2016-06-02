@@ -2,7 +2,7 @@
     
 gceNAME=mcsfs-gce
 gceZONE=us-central1-a
-gceNODES=1
+gceNODES=4
 
 function mcsfs-gce-tear-down(){
  	echo "Tearing down cluster..."
